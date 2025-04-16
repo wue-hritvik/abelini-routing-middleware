@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Health Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 2em;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1em;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 2em;
+            margin-bottom: 2em;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #34495e;
+        }
+        .status-up {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .status-down {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        th {
+            background-color: #ecf0f1;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 1em;
+            }
+            .card {
+                padding: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚦 Server Health Dashboard</h1>
+
+    <div class="card">
+        <h2>🕒 Timestamp</h2>
+        <p th:text="${timestamp}">Loading...</p>
+    </div>
+
+    <div class="card">
+        <h2>🔍 Health Status</h2>
+        <p>API Status: <span th:text="${apiStatus}" class="status-up">UP</span></p>
+        <p>UI Status: <span th:text="${uiStatus}" class="status-up">UP</span></p>
+    </div>
+
+    <div class="card">
+        <h2>💻 System Metrics</h2>
+        <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>CPU Load (%)</td><td th:text="${system.cpuLoad}">-</td></tr>
+            <tr><td>Available Processors</td><td th:text="${system.availableProcessors}">-</td></tr>
+            <tr><td>Total Memory (MB)</td><td th:text="${system.totalMemoryMB}">-</td></tr>
+            <tr><td>Used Memory (MB)</td><td th:text="${system.usedMemoryMB}">-</td></tr>
+            <tr><td>Free Memory (MB)</td><td th:text="${system.freeMemoryMB}">-</td></tr>
+            <tr><td>Java Version</td><td th:text="${system.javaVersion}">-</td></tr>
+            <tr><td>JVM Uptime (sec)</td><td th:text="${system.jvmUptimeSec}">-</td></tr>
+            <tr><td>System Uptime (sec)</td><td th:text="${system.systemUptimeSec}">-</td></tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📦 Application Metrics</h2>
+        <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>App PID</td><td th:text="${app.appPid}">-</td></tr>
+<!--            <tr><td>App Name</td><td th:text="${app.appName}">-</td></tr>-->
+            <tr><td>App Uptime (sec)</td><td th:text="${app.appUptimeSec}">-</td></tr>
+            <tr><td>CPU Load (%)</td><td th:text="${app.appCpuLoadPercent}">-</td></tr>
+            <tr><td>Memory Used (MB)</td><td th:text="${app.appMemoryUsedMB}">-</td></tr>
+            <tr><td>Virtual Memory (MB)</td><td th:text="${app.appVirtualMemoryMB}">-</td></tr>
+            <tr><td>OS Process Thread Count</td><td th:text="${app.appThreadCount}">-</td></tr>
+            <tr><td>JVM Live Threads</td><td th:text="${app.jvmLiveThreads}">-</td></tr>
+            <tr><td>JVM Daemon Threads</td><td th:text="${app.jvmDaemonThreads}">-</td></tr>
+            <tr><td>JVM Total Started Threads</td><td th:text="${app.jvmTotalStartedThreads}">-</td></tr>
+        </table>
+
+        <h3>🧵 JVM Thread States</h3>
+        <table>
+            <tr><th>State</th><th>Count</th></tr>
+            <tr th:each="entry : ${app.jvmThreadStates}">
+                <td th:text="${entry.key}">RUNNABLE</td>
+                <td th:text="${entry.value}">0</td>
+            </tr>
+        </table>
+
+        <h3>⚙️ Thread Pool Info</h3>
+        <p th:if="${app.threadPoolActive != null}">
+            Active Threads: <span th:text="${app.threadPoolActive}">-</span><br>
+            Pool Size: <span th:text="${app.threadPoolSize}">-</span>
+        </p>
+        <p th:if="${app.threadPoolInfo != null}" th:text="${app.threadPoolInfo}">Not available</p>
+    </div>
+
+    <div class="card">
+        <h2>🗄️ Disk Usage</h2>
+        <table>
+            <tr><th>Mount</th><th>Type</th><th>Total (MB)</th><th>Usable (MB)</th></tr>
+            <tr th:each="disk : ${disks}">
+                <td th:text="${disk.name}">/</td>
+                <td th:text="${disk.type}">ext4</td>
+                <td th:text="${disk.total}">0</td>
+                <td th:text="${disk.usable}">0</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>🌐 Network Interfaces</h2>
+        <table>
+            <tr><th>Name</th><th>MAC</th><th>IPv4</th><th>IPv6</th><th>Rx Bytes</th><th>Tx Bytes</th></tr>
+            <tr th:each="ni : ${network}">
+                <td th:text="${ni.name}">eth0</td>
+                <td th:text="${ni.mac}">00:00:00:00</td>
+                <td th:text="${ni.ipv4}">127.0.0.1</td>
+                <td th:text="${ni.ipv6}">::1</td>
+                <td th:text="${ni.rxBytes}">0</td>
+                <td th:text="${ni.txBytes}">0</td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>
