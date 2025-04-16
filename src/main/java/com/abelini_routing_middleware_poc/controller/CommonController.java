@@ -5,18 +5,18 @@ import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.Collections;
 
 
@@ -74,23 +74,29 @@ public class CommonController {
 
         // Make the actual HTTP call to App2
         String completeUrl = baseUrl + targetUrl;
+//        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
         log.info("complete url: " + completeUrl);
 
         ResponseEntity<byte[]> responseEntity = restTemplate.exchange(completeUrl, HttpMethod.GET, entity, byte[].class);
 
         // Set status
-        response.setStatus(responseEntity.getStatusCode().value());
+        response.setStatus(responseEntity.getStatusCodeValue());
 
-        // Set response headers
         responseEntity.getHeaders().forEach((key, values) -> {
             for (String value : values) {
+                if ("Location".equalsIgnoreCase(key)) {
+                    // Skip the Location header (used in redirects)
+                    continue;
+                }
+                // Only set headers that are not related to redirection
                 response.setHeader(key, value);
             }
         });
 
         // Write body
         byte[] body = responseEntity.getBody();
-        response.getOutputStream().write(body);
+        response.getOutputStream().write(body != null ? body : new byte[0]);
+
         response.flushBuffer();
     }
 }
