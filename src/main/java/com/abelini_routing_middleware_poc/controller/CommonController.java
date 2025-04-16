@@ -40,6 +40,11 @@ public class CommonController {
 
     @RequestMapping("/**")
     public void handleAll(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        if (request.getRequestURI().startsWith("/internal/")) {
+            log.info("internal path received return error");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Internal path should be handled by Nginx.");
+            return;
+        }
         String targetUrl = commonService.resolveSeoToQuery(request, response);
         RequestDispatcher dispatcher = request.getRequestDispatcher(targetUrl);
         dispatcher.forward(request, response);

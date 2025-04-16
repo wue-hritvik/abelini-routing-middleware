@@ -9,8 +9,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Ignore /internal/** paths
-        registry.addResourceHandler("/internal/**")
-                .addResourceLocations("file:/dev/null/");  // Effectively disables handling
+        // Exclude /internal/ paths from Spring Boot, so Nginx handles them
+        registry
+                .addResourceHandler("/internal/**")
+                .addResourceLocations("none:");
     }
 }
