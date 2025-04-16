@@ -24,9 +24,11 @@ import java.util.Collections;
 @Controller
 public class CommonController {
     private final CommonService commonService;
+    private final RestTemplate restTemplate;
 
-    public CommonController(CommonService commonService) {
+    public CommonController(CommonService commonService, RestTemplate restTemplate) {
         this.commonService = commonService;
+        this.restTemplate = restTemplate;
     }
 
 
@@ -56,6 +58,13 @@ public class CommonController {
 //        dispatcher.forward(request, response);
 ////         response.sendRedirect(targetUrl);
 
+        String scheme = request.getScheme();  // e.g., "http" or "https"
+        String host = request.getServerName();  // e.g., "localhost"
+        int port = request.getServerPort();  // Get the port (e.g., 9092)
+
+        // Construct the base URL with the port number (only if it's not 80 for HTTP or 443 for HTTPS)
+        String baseUrl = scheme + "://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+
         HttpHeaders headers = new HttpHeaders();
         Collections.list(request.getHeaderNames()).forEach(headerName -> {
             headers.set(headerName, request.getHeader(headerName));
@@ -64,8 +73,10 @@ public class CommonController {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         // Make the actual HTTP call to App2
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<byte[]> responseEntity = restTemplate.exchange(targetUrl, HttpMethod.GET, entity, byte[].class);
+        String completeUrl = baseUrl + targetUrl;
+        log.info("complete url: " + completeUrl);
+
+        ResponseEntity<byte[]> responseEntity = restTemplate.exchange(completeUrl, HttpMethod.GET, entity, byte[].class);
 
         // Set status
         response.setStatus(responseEntity.getStatusCode().value());
