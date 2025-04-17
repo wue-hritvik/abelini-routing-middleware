@@ -57,16 +57,21 @@ public class CommonController {
 
     @RequestMapping("/1/**")
     public void proxyRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-       log.info("1");
+        log.info("1 proxy");
         if (request.getRequestURI().startsWith("/internal/")) {
             log.info("internal path received return error");
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Internal path should be handled by Nginx.");
             return;
         }
 
-        String targetUrl = commonService.resolveSeoToQuery(request,response);
+        String targetUrl = commonService.resolveSeoToQuery(request, response);
 
-        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
+        String host = request.getServerName();
+        int port = request.getServerPort();
+
+        String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+        String completeUrl = baseUrl + targetUrl;
+//        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
         log.info("complete url: " + completeUrl);
 
         // Create an HttpURLConnection to the target URL
@@ -76,23 +81,43 @@ public class CommonController {
         // Set the same HTTP method as the incoming request
         connection.setRequestMethod(request.getMethod());
         connection.setConnectTimeout(5000); // 5 seconds to connect
-        connection.setReadTimeout(30000);
+        connection.setReadTimeout(30000); //30 sec
 
         // Copy all incoming request headers to the outgoing request
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
+            if ("Connection".equalsIgnoreCase(headerName) ||
+                    "Keep-Alive".equalsIgnoreCase(headerName) ||
+                    "Transfer-Encoding".equalsIgnoreCase(headerName)) {
+                continue;
+            }
             connection.setRequestProperty(headerName, request.getHeader(headerName));
         }
 
+        if ("POST".equalsIgnoreCase(request.getMethod()) || "PUT".equalsIgnoreCase(request.getMethod())) {
+            connection.setDoOutput(true);
+            try (InputStream inputStream = request.getInputStream();
+                 OutputStream outputStream = connection.getOutputStream()) {
+
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+            }
+        }
+
         int responseCode = connection.getResponseCode();
+        log.info("status :{}", responseCode);
         response.setStatus(responseCode);
 
+        log.info("headers received :{}", connection.getHeaderFields());
         // Copy the headers from the response to the outgoing response
         for (String headerKey : connection.getHeaderFields().keySet()) {
             if ("Location".equalsIgnoreCase(headerKey)) {
                 log.info("redirect header found");
-                continue; // Skip redirection headers if necessary
+//                continue; // Skip redirection headers if necessary
             }
             for (String headerValue : connection.getHeaderFields().get(headerKey)) {
                 response.setHeader(headerKey, headerValue);
@@ -118,17 +143,22 @@ public class CommonController {
     }
 
     @RequestMapping("/2/**")
-    public ResponseEntity<byte[]> handleAll2(HttpServletRequest request,HttpServletResponse response) throws Exception {
-        log.info("2");
+    public ResponseEntity<byte[]> handleAll2(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        log.info("2 proxy");
         if (request.getRequestURI().startsWith("/internal/")) {
             log.info("internal path received return error");
             return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND)
                     .body("Internal path should be handled by Nginx.".getBytes());
         }
 
-        String targetUrl = commonService.resolveSeoToQuery(request,response);
+        String targetUrl = commonService.resolveSeoToQuery(request, response);
 
-        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
+        String host = request.getServerName();
+        int port = request.getServerPort();
+
+        String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+        String completeUrl = baseUrl + targetUrl;
+//        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
         log.info("complete url: " + completeUrl);
 
         try {
@@ -149,7 +179,7 @@ public class CommonController {
         } catch (Exception ex) {
             log.error("Error while making internal call to {}", completeUrl, ex);
             return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-                    .body(("Internal call failed: " + ex.getMessage()).getBytes());
+                    .body(("Error while processing request.").getBytes());
         }
     }
 
@@ -166,7 +196,7 @@ public class CommonController {
 
     @RequestMapping("/**")
     public void handleAll(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("all");
+        log.info("all proxy");
         if (request.getRequestURI().startsWith("/internal/")) {
             log.info("internal path received return error");
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Internal path should be handled by Nginx.");
@@ -193,8 +223,8 @@ public class CommonController {
 
 
         // Make the actual HTTP call to App2
-//        String completeUrl = baseUrl + targetUrl;
-        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
+        String completeUrl = baseUrl + targetUrl;
+//        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
         log.info("complete url: " + completeUrl);
 
         try {
@@ -206,13 +236,13 @@ public class CommonController {
             response.setStatus(status);
             response.setContentType(responseEntity.getHeaders().getContentType().toString());
 
-            log.info("response entity header : {}",responseEntity.getHeaders());
+            log.info("response entity header : {}", responseEntity.getHeaders());
             responseEntity.getHeaders().forEach((key, values) -> {
                 for (String value : values) {
                     if ("Location".equalsIgnoreCase(key)) {
                         log.info("redirect header found");
                         // Skip the Location header (used in redirects)
-                        continue;
+//                        continue;
                     }
                     // Only set headers that are not related to redirection
                     response.setHeader(key, value);
@@ -221,11 +251,11 @@ public class CommonController {
 
             // Write body
             byte[] body = responseEntity.getBody();
-            log.info("body length ::{}",body != null ? body.length : null);
+            log.info("body length ::{}", body != null ? body.length : null);
             response.getOutputStream().write(body != null && body.length > 0 ? body : new byte[0]);
         } catch (Exception ex) {
             log.error("Error while making internal call to {}", completeUrl, ex);
-            response.sendError(500, "Internal call failed: " + ex.getMessage());
+            response.sendError(500, "Error while processing request.");
         }
 
         response.flushBuffer();
