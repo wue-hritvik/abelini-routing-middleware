@@ -105,7 +105,14 @@ public class CommonService {
         try {
             System.out.println("convert seo to url");
 
-            String path = request.getRequestURI().replace("/1","").replace("/2","");
+            String path = request.getRequestURI()
+                    .replace("/1/", "/")
+                    .replace("/2/", "/")
+                    .replace("/3/", "/")
+                    .replace("/4/", "/")
+                    .replace("/5/", "/")
+                    .replace("/6/", "/");
+
             String queryPart = request.getQueryString();
 
             if (path.startsWith("/internal")) {
