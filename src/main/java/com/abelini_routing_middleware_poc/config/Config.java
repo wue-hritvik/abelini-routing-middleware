@@ -5,11 +5,16 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -42,9 +47,25 @@ public class Config {
 
     @Bean
     public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+
+        RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setErrorHandler(new NoOpErrorHandler());
         return restTemplate;
     }
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder()
+                .clientConnector(
+                        new ReactorClientHttpConnector(HttpClient.create()
+                                .responseTimeout(Duration.ofSeconds(10))
+                        )
+                )
+                .build();
+    }
+
 }
 
