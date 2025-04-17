@@ -100,7 +100,7 @@ public class CommonController {
             try (InputStream inputStream = request.getInputStream();
                  OutputStream outputStream = connection.getOutputStream()) {
 
-                byte[] buffer = new byte[8192];
+                byte[] buffer = new byte[16384];
                 int bytesRead;
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
@@ -129,7 +129,7 @@ public class CommonController {
              OutputStream outputStream = response.getOutputStream()) {
 
             // Set a buffer size for efficient streaming
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[16384];
             int bytesRead;
 
             // Read and write the data in chunks
