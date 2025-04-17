@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Enumeration;
 
 
 @Log4j2
@@ -70,11 +71,13 @@ public class CommonController {
         String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
 
         HttpHeaders headers = new HttpHeaders();
-        Collections.list(request.getHeaderNames()).forEach(headerName -> {
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
             headers.set(headerName, request.getHeader(headerName));
-        });
+        }
+        HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
 
         // Make the actual HTTP call to App2
 //        String completeUrl = baseUrl + targetUrl;
@@ -103,6 +106,7 @@ public class CommonController {
 
             // Write body
             byte[] body = responseEntity.getBody();
+            log.info("body length ::{}",body != null ? body.length : null);
             response.getOutputStream().write(body != null && body.length > 0 ? body : new byte[0]);
         } catch (Exception ex) {
             log.error("Error while making internal call to {}", completeUrl, ex);
