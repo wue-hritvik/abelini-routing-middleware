@@ -142,6 +142,86 @@ public class CommonController {
         }
     }
 
+    @RequestMapping("/3/**")
+    public void proxyRequest3(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.info("3 proxy");
+        if (request.getRequestURI().startsWith("/internal/")) {
+            log.info("internal path received return error");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Internal path should be handled by Nginx.");
+            return;
+        }
+
+        String targetUrl = commonService.resolveSeoToQuery(request, response);
+
+        String host = request.getServerName();
+        int port = request.getServerPort();
+
+        String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+        String completeUrl = baseUrl + targetUrl;
+//        String completeUrl = "https://route.whereuelevate.sbs" + targetUrl;
+        log.info("complete url: " + completeUrl);
+
+        // Create an HttpURLConnection to the target URL
+        URL url = new URL(completeUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        // Set the same HTTP method as the incoming request
+        connection.setRequestMethod(request.getMethod());
+        connection.setConnectTimeout(5000); // 5 seconds to connect
+        connection.setReadTimeout(30000); //30 sec
+
+        // Copy all incoming request headers to the outgoing request
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            if ("Connection".equalsIgnoreCase(headerName) ||
+                    "Keep-Alive".equalsIgnoreCase(headerName) ||
+                    "Transfer-Encoding".equalsIgnoreCase(headerName)) {
+                continue;
+            }
+            connection.setRequestProperty(headerName, request.getHeader(headerName));
+        }
+
+        if ("POST".equalsIgnoreCase(request.getMethod()) || "PUT".equalsIgnoreCase(request.getMethod())) {
+            connection.setDoOutput(true);
+            try (InputStream inputStream = request.getInputStream();
+                 OutputStream outputStream = connection.getOutputStream()) {
+
+                byte[] buffer = new byte[16384];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+            }
+        }
+
+        int responseCode = connection.getResponseCode();
+        log.info("status :{}", responseCode);
+        response.setStatus(responseCode);
+
+        log.info("headers received :{}", connection.getHeaderFields());
+        // Copy the headers from the response to the outgoing response
+        for (String headerKey : connection.getHeaderFields().keySet()) {
+            if ("Location".equalsIgnoreCase(headerKey)) {
+                log.info("redirect header found");
+//                continue; // Skip redirection headers if necessary
+            }
+            for (String headerValue : connection.getHeaderFields().get(headerKey)) {
+                response.setHeader(headerKey, headerValue);
+            }
+        }
+
+        // Stream the response data directly from the connection to the client
+        byte[] responseData = new byte[0];
+        try (InputStream inputStream = connection.getInputStream()) {
+            responseData = inputStream.readAllBytes();  // Read all bytes at once
+        } catch (IOException e) {
+            log.error("Error while proxying the response", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+        }
+        response.getOutputStream().write(responseData);
+    }
+
     @RequestMapping("/2/**")
     public ResponseEntity<byte[]> handleAll2(HttpServletRequest request, HttpServletResponse response) throws Exception {
         log.info("2 proxy");
