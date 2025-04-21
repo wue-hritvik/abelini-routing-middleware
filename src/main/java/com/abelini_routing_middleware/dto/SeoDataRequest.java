@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SeoDataRequest {
     public List<String> pathParts = new ArrayList<>();
-    public int storeId = 1;
-    public int languageId = 2;
+    public int storeId = 0;
+    public int languageId = 1;
     public String type = "keyword";
 }

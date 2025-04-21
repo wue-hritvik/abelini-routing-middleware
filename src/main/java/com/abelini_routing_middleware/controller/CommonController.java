@@ -35,6 +35,12 @@ public class CommonController {
 
         String targetUrl = commonService.resolveSeoToQuery(request, response);
 
+        if (response.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY ||
+                response.getStatus() == HttpServletResponse.SC_FOUND) {
+            log.info("Redirect already handled, returning early.");
+            return;
+        }
+
         String host = request.getServerName();
         int port = request.getServerPort();
 
@@ -42,16 +48,13 @@ public class CommonController {
         String completeUrl = baseUrl + targetUrl;
         log.info("complete url: " + completeUrl);
 
-        // Create an HttpURLConnection to the target URL
         URL url = new URL(completeUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        // Set the same HTTP method as the incoming request
         connection.setRequestMethod(request.getMethod());
         connection.setConnectTimeout(5000); // 5 seconds to connect
         connection.setReadTimeout(30000); //30 sec
 
-        // Copy all incoming request headers to the outgoing request
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
@@ -80,8 +83,6 @@ public class CommonController {
         log.info("status :{}", responseCode);
         response.setStatus(responseCode);
 
-//        log.info("headers received :{}", connection.getHeaderFields());
-        // Copy the headers from the response to the outgoing response
         for (String headerKey : connection.getHeaderFields().keySet()) {
             if ("Location".equalsIgnoreCase(headerKey)) {
                 log.info("redirect header found");
@@ -92,7 +93,6 @@ public class CommonController {
             }
         }
 
-        // Stream the response data directly from the connection to the client
         try (InputStream inputStream = connection.getInputStream();
              OutputStream outputStream = response.getOutputStream()) {
 
