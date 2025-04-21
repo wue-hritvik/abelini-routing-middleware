@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc;
+package com.abelini_routing_middleware;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

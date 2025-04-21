@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc.config;
+package com.abelini_routing_middleware.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com</groupId>
-	<artifactId>abelini-routing-middleware-poc</artifactId>
+	<artifactId>abelini-routing-middleware</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>abelini-routing-middleware-poc</name>
+	<name>abelini-routing-middleware</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>

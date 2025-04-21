@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc.controller;
+package com.abelini_routing_middleware.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

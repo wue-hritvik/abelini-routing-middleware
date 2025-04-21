@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc.config;
+package com.abelini_routing_middleware.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

@@ -1,7 +1,6 @@
-package com.abelini_routing_middleware_poc.config;
+package com.abelini_routing_middleware.config;
 
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.ResponseErrorHandler;
 

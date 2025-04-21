@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc;
+package com.abelini_routing_middleware;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,10 +7,10 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @EnableCaching
-public class AbeliniRoutingMiddlewarePocApplication {
+public class AbeliniRoutingMiddlewareApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AbeliniRoutingMiddlewarePocApplication.class, args);
+        SpringApplication.run(AbeliniRoutingMiddlewareApplication.class, args);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc.config;
+package com.abelini_routing_middleware.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

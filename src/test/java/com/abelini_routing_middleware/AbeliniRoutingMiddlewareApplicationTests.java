@@ -1,10 +1,10 @@
-package com.abelini_routing_middleware_poc;
+package com.abelini_routing_middleware;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AbeliniRoutingMiddlewarePocApplicationTests {
+class AbeliniRoutingMiddlewareApplicationTests {
 
 	@Test
 	void contextLoads() {

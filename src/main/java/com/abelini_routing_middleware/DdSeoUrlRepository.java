@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc;
+package com.abelini_routing_middleware;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

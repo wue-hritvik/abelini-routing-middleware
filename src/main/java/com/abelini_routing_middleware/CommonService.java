@@ -1,4 +1,4 @@
-package com.abelini_routing_middleware_poc;
+package com.abelini_routing_middleware;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -7,7 +7,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
