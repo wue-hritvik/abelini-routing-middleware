@@ -70,10 +70,10 @@ public class CommonService {
 
                     switch (key) {
                         case "category_id":
-                            page = "category.html";
+                            page = "engagement-rings/classic-solitaire/diamonds.html";
                             break;
                         case "product_id":
-                            page = "product.html";
+                            page = "product/4-claw-set-round-brilliant-cut-solitaire-diamond-engagement-rings-uk-rine3044.html";
                             break;
                         case "manufacturer_id":
                             page = "manufacturer.html";
