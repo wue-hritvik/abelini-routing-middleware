@@ -33,10 +33,10 @@ public class CommonController {
 
     @RequestMapping("/**")
     public void proxyRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        log.info("1 proxy");
+        log.info("proxy");
         if (request.getRequestURI().startsWith("/internal/")) {
             log.info("internal path received return error");
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Internal path should be handled by Nginx.");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Error while processing request.");
             return;
         }
 
@@ -87,7 +87,7 @@ public class CommonController {
         log.info("status :{}", responseCode);
         response.setStatus(responseCode);
 
-        log.info("headers received :{}", connection.getHeaderFields());
+//        log.info("headers received :{}", connection.getHeaderFields());
         // Copy the headers from the response to the outgoing response
         for (String headerKey : connection.getHeaderFields().keySet()) {
             if ("Location".equalsIgnoreCase(headerKey)) {
