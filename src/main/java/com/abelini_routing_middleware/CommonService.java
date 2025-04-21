@@ -20,97 +20,12 @@ public class CommonService {
         this.ddSeoUrlRepository = ddSeoUrlRepository;
     }
 
-//    private static final Map<String, Map<String, String>> seoMap = new HashMap<>() {{
-//        put("halo-rings", Map.of("type", "style", "value", "55"));
-//        put("white-gold", Map.of("type", "metal", "value", "3"));
-//        put("engagement-rings", Map.of("type", "category", "value", "23"));
-//        put("diamond-rings", Map.of("type", "style", "value", "1228"));
-//        put("channel-setting-round-full-eternity-diamond-ring-available-in-2.5mm-to-3.5mm-rinw1002", Map.of("type", "product", "value", "1228"));
-//        put("gold", Map.of("type", "metal", "value", "92"));
-//        put("round", Map.of("type", "shape", "value", "30"));
-//    }};
-
-//    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
-//    public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
-//        System.out.println("convert seo to url");
-//
-//        String path = request.getRequestURI();
-//        String query = request.getQueryString();
-//
-//        int storeId = 0;
-//        int languageId = 1;
-//
-//        // Split path by "/" and ignore empty parts
-//        String[] parts = Arrays.stream(path.split("/")).filter(p -> !p.isBlank()).toArray(String[]::new);
-//
-//        String page = "category.html"; // Default
-//        Map<String, String> queryParams = new LinkedHashMap<>();
-//
-//        if (parts.length > 0 && seoMap.containsKey(parts[parts.length - 1])) {
-//            Map<String, String> last = seoMap.get(parts[parts.length - 1]);
-//            if ("product".equals(last.get("type"))) {
-//                page = "product.html";
-//                queryParams.put("product_id", last.get("value"));
-//            }
-//        }
-//
-//        for (String part : parts) {
-//            Map<String, String> data = seoMap.get(part);
-//            if (data != null) {
-//                switch (data.get("type")) {
-//                    case "category":
-//                        queryParams.put("category_id", data.get("value"));
-//                        break;
-//                    case "metal":
-//                        queryParams.put("metal_id", data.get("value"));
-//                        break;
-//                    case "shape":
-//                        queryParams.put("shape_id", data.get("value"));
-//                        break;
-//                    case "style":
-//                        queryParams.put("style_id", data.get("value"));
-//                        break;
-//                    case "product":
-//                        queryParams.put("product_id", data.get("value"));
-//                        break;
-//                    // Add more types as needed
-//                }
-//            }
-//        }
-//
-//        if (query != null) {
-//            for (String pair : query.split("&")) {
-//                String[] kv = pair.split("=");
-//                if (kv.length == 2 && !queryParams.containsKey(kv[0])) {
-//                    queryParams.put(kv[0], kv[1]);
-//                }
-//            }
-//        }
-//
-//        // Build final query string
-//        StringBuilder queryString = new StringBuilder(page);
-//        if (!queryParams.isEmpty()) {
-//            queryString.append("?");
-//            queryParams.forEach((k, v) -> queryString.append(k).append("=").append(v).append("&"));
-//            queryString.setLength(queryString.length() - 1); // remove trailing &
-//        }
-//
-//        System.out.println("Final URL: " + queryString);
-//        return "/" + queryString;
-//    }
-
     @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             System.out.println("convert seo to url");
 
-            String path = request.getRequestURI()
-                    .replace("/1/", "/")
-                    .replace("/2/", "/")
-                    .replace("/3/", "/")
-                    .replace("/4/", "/")
-                    .replace("/5/", "/")
-                    .replace("/6/", "/");
+            String path = request.getRequestURI();
 
             String queryPart = request.getQueryString();
 
@@ -226,30 +141,5 @@ public class CommonService {
             System.out.println("Error occurred while converting");
             return "/internal/";
         }
-    }
-
-
-    public String handleHtml(String page, HttpServletRequest request, Model model) {
-//        String requestUrl = request.getRequestURL().toString();
-        String query = request.getQueryString() != null ? "?" + request.getQueryString() : "";
-//        log.info("page: " + page);
-//        log.info("requestUrl: " + requestUrl);
-//        log.info("query: " + query);
-//        String fullUrl = requestUrl + query;
-//        log.info("full url: " + fullUrl);
-//        return "redirect:" + fullUrl;
-
-        if (!query.isBlank()) {
-            for (String pair : query.split("&")) {
-                String[] kv = pair.split("=");
-                if (kv.length == 2) {
-                    model.addAttribute(kv[0], kv[1]);
-                }
-            }
-        }
-
-        model.asMap().forEach((k, v) -> log.info(k + " = " + v));
-
-        return page.replace(".html", "");
     }
 }

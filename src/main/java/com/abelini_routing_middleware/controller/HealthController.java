@@ -36,7 +36,7 @@ public class HealthController {
         this.applicationContext = applicationContext;
     }
 
-    @GetMapping("/api/v1/health")
+    @GetMapping("/health")
     public String health(Model model) throws InterruptedException {
         SystemInfo systemInfo = new SystemInfo();
         HardwareAbstractionLayer hal = systemInfo.getHardware();
