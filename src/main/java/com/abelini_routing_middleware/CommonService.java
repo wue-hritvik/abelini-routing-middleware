@@ -1,23 +1,34 @@
 package com.abelini_routing_middleware;
 
+import com.abelini_routing_middleware.dto.SeoDataRequest;
+import com.abelini_routing_middleware.dto.SeoDataResponseDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Log4j2
 @Service
 public class CommonService {
+    private final ObjectMapper objectMapper;
+    private final HttpClient client = HttpClient.newHttpClient();
 
-    private final DdSeoUrlRepository ddSeoUrlRepository;
+    @Value("${seo.data.api.url}")
+    private String API_URL;
 
-    public CommonService(DdSeoUrlRepository ddSeoUrlRepository) {
-        this.ddSeoUrlRepository = ddSeoUrlRepository;
+    public CommonService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
@@ -40,10 +51,10 @@ public class CommonService {
                 try {
                     response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
                     response.setHeader("Location", replaceLink);
-                    return null; // Return null to avoid further processing
+                    return "/internal/";
                 } catch (Exception e) {
                     e.printStackTrace();
-                    return null; // In case of an error, return null
+                    return "/internal/";
                 }
             }
 
@@ -63,7 +74,7 @@ public class CommonService {
             if (!pathParts.isEmpty()) {
                 String page = "index.html";
 
-                List<DdSeoUrl> pageFind = ddSeoUrlRepository.findByKeywordAndStoreIdAndLanguageId(pathParts.get(0), storeId, languageId);
+                List<SeoDataResponseDTO> pageFind = fetchSeoData(List.of(pathParts.get(0)), storeId, languageId, "keyword");
 
                 if (pathParts.get(0).equals("product") || !pageFind.isEmpty()) {
                     String key = pathParts.get(0).equals("product") ? "product_id" : pageFind.get(0).getKey();
@@ -86,24 +97,25 @@ public class CommonService {
                             break;
                     }
 
-                    List<DdSeoUrl> dataList = ddSeoUrlRepository.findAllByKeywordInAndStoreIdAndLanguageId(pathParts, storeId, languageId);
+                    List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
 
                     if (queryPart != null && !queryPart.isBlank()) {
-                        Set<String> allValueParts = Arrays.stream(queryPart.split("&"))
+                        List<String> allValueParts = Arrays.stream(queryPart.split("&"))
                                 .map(p -> p.split("=", 2))
                                 .filter(kv -> kv.length == 2)
                                 .flatMap(kv -> Arrays.stream(kv[1].split("_")))
                                 .filter(v -> !v.isBlank())
-                                .collect(Collectors.toSet());
+                                .distinct()
+                                .collect(Collectors.toList());
 
-                        List<DdSeoUrl> valueList = ddSeoUrlRepository.findAllByValueInAndStoreIdAndLanguageId(allValueParts, storeId, languageId);
+                        List<SeoDataResponseDTO> valueList = fetchSeoData(allValueParts, storeId, languageId, "value");
                         if (!valueList.isEmpty()) {
                             dataList.addAll(valueList);
                         }
                     }
 
-                    for (DdSeoUrl data : dataList) {
-                        filterMap.computeIfAbsent(data.getKey(), k -> new ArrayList<>()).add(data.getValue());
+                    for (SeoDataResponseDTO data : dataList) {
+                        filterMap.computeIfAbsent(data.getKey(), k -> new ArrayList<>()).add(data.getShopifyId());
                     }
 
                     Map<String, String> queryParams = new LinkedHashMap<>();
@@ -134,12 +146,36 @@ public class CommonService {
                 }
             }
 
-            String result = "/internal" + (queryString.toString().startsWith("/") ? queryString : "/" + queryString);
-            System.out.println("Final URL: " + result);
-            return result;
+            return "/internal" + (queryString.toString().startsWith("/") ? queryString : "/" + queryString);
         } catch (Exception e) {
-            System.out.println("Error occurred while converting");
+            log.error("Error occurred while converting seo to query");
             return "/internal/";
+        }
+    }
+
+    public List<SeoDataResponseDTO> fetchSeoData(List<String> pathParts, int storeId, int languageId, String type) {
+        try {
+            SeoDataRequest requestBody = new SeoDataRequest(pathParts, storeId, languageId, type);
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(API_URL))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), new TypeReference<>() {
+                });
+            }
+            log.error("Failed to fetch SEO data: " + response.statusCode());
+            return Collections.emptyList();
+
+        } catch (Exception e) {
+            log.error("exception while fetch SEO data: {}", e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 }

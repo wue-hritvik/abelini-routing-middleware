@@ -4,11 +4,8 @@ import com.abelini_routing_middleware.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,13 +19,9 @@ import java.util.Enumeration;
 @Controller
 public class CommonController {
     private final CommonService commonService;
-    private final RestTemplate restTemplate;
-    private final WebClient webClient;
 
-    public CommonController(CommonService commonService, RestTemplate restTemplate, WebClient webClient) {
+    public CommonController(CommonService commonService) {
         this.commonService = commonService;
-        this.restTemplate = restTemplate;
-        this.webClient = webClient;
     }
 
     @RequestMapping("/**")
