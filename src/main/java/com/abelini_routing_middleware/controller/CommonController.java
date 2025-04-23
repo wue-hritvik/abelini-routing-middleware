@@ -13,8 +13,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 @Log4j2
@@ -128,13 +134,28 @@ public class CommonController {
 
             String host = request.getServerName();
             int port = request.getServerPort();
-
             String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
             String completeUrl = baseUrl + targetUrl;
 
+            URI uri = URI.create(completeUrl);
+            String fullPath = uri.getPath().replaceFirst("^/internal", "");
+
+            Map<String, String> queryParams = new LinkedHashMap<>();
+            if (uri.getQuery() != null) {
+                Arrays.stream(uri.getQuery().split("&"))
+                        .map(param -> param.split("=", 2))
+                        .forEach(pair -> {
+                            String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+                            String value = pair.length > 1 ? URLDecoder.decode(pair[1], StandardCharsets.UTF_8) : "";
+                            queryParams.put(key, value);
+                        });
+            }
+
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("url", completeUrl);
-            jsonObject.put("path", targetUrl.replace("/internal", ""));
+            jsonObject.put("path", fullPath);
+            queryParams.forEach(jsonObject::put);
+
             return ResponseEntity.ok(jsonObject.toString());
         } catch (Exception e) {
             log.error("Error while proxying the response", e);
