@@ -11,12 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -57,7 +57,7 @@ public class CommonService {
         try {
             log.info("convert seo to url");
 
-            String path = request.getRequestURI();
+            String path = request.getRequestURI().replace("/routing-value", "");
 
             if (path.startsWith("/internal")) {
                 return path;
@@ -72,7 +72,7 @@ public class CommonService {
                     response.flushBuffer(); // Important: make sure the response is sent
                     return null; // return here to STOP further processing
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("Error while redirect : {}", e.getMessage(), e);
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirection failed");
                     return null;
                 }
@@ -95,20 +95,40 @@ public class CommonService {
 
             Map<String, List<String>> filterMap = new HashMap<>();
 
+            AtomicReference<String> stoneType = new AtomicReference<>(null);
+
             List<String> pathParts = Arrays.stream(path.split("/"))
                     .filter(p -> !p.isBlank())
-                    .map(part -> part.replace("-lbg", "").replace("-msnt", ""))
+                    .map(part -> {
+                        if (part.contains("-lbg")) {
+                            stoneType.set("lbg");
+                            return part.replace("-lbg", "");
+                        } else if (part.contains("-msnt")) {
+                            stoneType.set("msnt");
+                            return part.replace("-msnt", "");
+                        }
+                        return part;
+                    })
                     .collect(Collectors.toList());
 
             StringBuilder queryString = new StringBuilder();
 
             if (!pathParts.isEmpty()) {
-                String page;
+                String page = pageDefault;
 
                 List<SeoDataResponseDTO> pageFind = fetchSeoData(List.of(pathParts.get(0)), storeId, languageId, "keyword");
 
-                if (pathParts.get(0).equals("product") || !pageFind.isEmpty()) {
-                    String key = pathParts.get(0).equals("product") ? "product_id" : pageFind.get(0).getKey();
+                if (pathParts.get(0).equals("product") || pathParts.get(0).equals("blog") || !pageFind.isEmpty()) {
+                    String key = "";
+                    if (!pageFind.isEmpty()) {
+                        key = pageFind.get(0).getKey();
+                    } else if (pathParts.get(0).equals("product")) {
+                        key = "product_id";
+                        pathParts.remove(0);
+                    } else if (pathParts.get(0).equals("blog")) {
+                        key = "article_id";
+                        pathParts.remove(0);
+                    }
 
                     page = switch (key) {
                         case "category_id" -> pageCategory;
@@ -189,8 +209,29 @@ public class CommonService {
 
                     //condition: all others param
                     for (Map.Entry<String, String> entry : rawQueryParams.entrySet()) {
-                        if (!queryParams.containsKey(entry.getKey())) {
-                            queryParams.put(entry.getKey(), entry.getValue());
+                        String entryKey = entry.getKey();
+                        String newValue = entry.getValue();
+
+                        if (queryParams.containsKey(entryKey)) {
+                            Set<String> values = new LinkedHashSet<>(Arrays.asList(queryParams.get(entryKey).split(",")));
+                            values.addAll(Arrays.asList(newValue.split(",")));
+                            queryParams.put(entryKey, String.join(",", values));
+                        } else {
+                            queryParams.put(entryKey, newValue);
+                        }
+                    }
+
+                    // Step 3: Merge stoneType into queryParams if not null
+                    if (stoneType.get() != null && !stoneType.get().isBlank()) {
+                        String stoneKey = "stone_type";
+                        String stoneValue = stoneType.get();
+
+                        if (queryParams.containsKey(stoneKey)) {
+                            Set<String> values = new LinkedHashSet<>(Arrays.asList(queryParams.get(stoneKey).split(",")));
+                            values.add(stoneValue); // ensure uniqueness
+                            queryParams.put(stoneKey, String.join(",", values));
+                        } else {
+                            queryParams.put(stoneKey, stoneValue);
                         }
                     }
 
@@ -245,16 +286,20 @@ public class CommonService {
                 if ("DESC".equals(orderValue)) return "CREATED_DESC";
                 break;
 
-            case "manual":
-                return "MANUAL";
-
-            case "created":
-                return "CREATED";
-
-            case "alpha":
-                if ("ASC".equals(orderValue)) return "ALPHA_ASC";
-                if ("DESC".equals(orderValue)) return "ALPHA_DESC";
+            case "p.sort_order":
+                if ("ASC".equals(orderValue)) return "MANUAL";
                 break;
+//
+//            case "created":
+//                return "CREATED";
+//                break;
+//
+//            case "alpha":
+//                if ("ASC".equals(orderValue)) return "ALPHA_ASC";
+//                if ("DESC".equals(orderValue)) return "ALPHA_DESC";
+//                break;
+            default:
+                return null;
         }
 
         return null;

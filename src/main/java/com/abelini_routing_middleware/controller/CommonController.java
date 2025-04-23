@@ -4,6 +4,8 @@ import com.abelini_routing_middleware.CommonService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import org.json.JSONObject;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -46,6 +48,7 @@ public class CommonController {
 
         String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
         String completeUrl = baseUrl + targetUrl;
+
         log.info("complete url: " + completeUrl);
 
         URL url = new URL(completeUrl);
@@ -107,6 +110,36 @@ public class CommonController {
         } catch (IOException e) {
             log.error("Error while proxying the response", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+        }
+    }
+
+    @RequestMapping("/routing-value/**")
+    public ResponseEntity<?> proxyPathRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            log.info("routing value");
+
+            String targetUrl = commonService.resolveSeoToQuery(request, response);
+
+            if (response.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY ||
+                    response.getStatus() == HttpServletResponse.SC_FOUND) {
+                log.info("Redirect already handled, returning early.");
+                return null;
+            }
+
+            String host = request.getServerName();
+            int port = request.getServerPort();
+
+            String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+            String completeUrl = baseUrl + targetUrl;
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("url", completeUrl);
+            jsonObject.put("path", targetUrl.replace("/internal", ""));
+            return ResponseEntity.ok(jsonObject.toString());
+        } catch (Exception e) {
+            log.error("Error while proxying the response", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+            return null;
         }
     }
 }
