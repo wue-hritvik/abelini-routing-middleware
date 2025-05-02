@@ -60,9 +60,11 @@ public class CommonController {
         URL url = new URL(completeUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
+//        connection.setRequestProperty("X-Robots-Tag", "noindex, nofollow");
+
         connection.setRequestMethod(request.getMethod());
-        connection.setConnectTimeout(5000); // 5 seconds to connect
-        connection.setReadTimeout(30000); //30 sec
+        connection.setConnectTimeout(7000); // 7 seconds to connect
+        connection.setReadTimeout(40000); //40 sec
 
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -97,6 +99,9 @@ public class CommonController {
                 log.info("redirect header found");
 //                continue; // Skip redirection headers if necessary
             }
+//            if ("X-Robots-Tag".equalsIgnoreCase(headerKey)) {
+//                continue;
+//            }
             for (String headerValue : connection.getHeaderFields().get(headerKey)) {
                 response.setHeader(headerKey, headerValue);
             }
@@ -105,8 +110,8 @@ public class CommonController {
         try (InputStream inputStream = connection.getInputStream();
              OutputStream outputStream = response.getOutputStream()) {
 
-            // Set a buffer size for efficient streaming
-            byte[] buffer = new byte[16384];
+            // Set 64 kb buffer size for efficient streaming
+            byte[] buffer = new byte[65536];
             int bytesRead;
 
             // Read and write the data in chunks

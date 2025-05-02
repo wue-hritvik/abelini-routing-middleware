@@ -154,6 +154,31 @@
         </table>
     </div>
 
+    <div class="card" th:if="${cacheStats != null and !cacheStats.isEmpty()}">
+        <h2>🧠 Cache Stats</h2>
+        <table>
+            <tr>
+                <th>Cache Name</th>
+                <th>Hit Count</th>
+                <th>Miss Count</th>
+                <th>Load Success</th>
+                <th>Load Failure</th>
+                <th>Evictions</th>
+                <th>Hit Rate (%)</th>
+            </tr>
+            <tr th:each="entry : ${cacheStats}">
+                <td th:text="${entry.key}">default</td>
+                <td th:text="${entry.value.hitCount}">0</td>
+                <td th:text="${entry.value.missCount}">0</td>
+                <td th:text="${entry.value.loadSuccessCount}">0</td>
+                <td th:text="${entry.value.loadFailureCount}">0</td>
+                <td th:text="${entry.value.evictionCount}">0</td>
+                <td th:text="${entry.value.hitRate}">0.00</td>
+            </tr>
+        </table>
+    </div>
+
+
 </div>
 </body>
 </html>

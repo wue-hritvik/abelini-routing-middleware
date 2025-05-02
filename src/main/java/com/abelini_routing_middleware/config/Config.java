@@ -27,7 +27,7 @@ public class Config {
 
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(500000)  // Max number of entries in cache set to 5 lakh
-                .expireAfterWrite(31, TimeUnit.DAYS) // Expiry after 31 days
+                .expireAfterWrite(7, TimeUnit.DAYS) // Expiry after 7 days
                 .recordStats() // stats
         );
 
@@ -49,8 +49,8 @@ public class Config {
     @Bean
     public RestTemplate restTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(10000);
+        factory.setConnectTimeout(7000);
+        factory.setReadTimeout(40000);
 
         RestTemplate restTemplate = new RestTemplate(factory);
         restTemplate.setErrorHandler(new NoOpErrorHandler());
@@ -62,7 +62,7 @@ public class Config {
         return WebClient.builder()
                 .clientConnector(
                         new ReactorClientHttpConnector(HttpClient.create()
-                                .responseTimeout(Duration.ofSeconds(10))
+                                .responseTimeout(Duration.ofSeconds(40))
                         )
                 )
                 .build();

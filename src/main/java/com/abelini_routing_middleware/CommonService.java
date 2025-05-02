@@ -27,6 +27,7 @@ public class CommonService {
 
     @Value("${seo.data.api.url}")
     private String API_URL;
+
     @Value("${page.article}")
     private String pageArticle;
     @Value("${page.author}")
@@ -39,8 +40,6 @@ public class CommonService {
     private String pageCustomerStory;
     @Value("${page.information}")
     private String pageInformation;
-    @Value("${page.product.feed}")
-    private String pageProductFeed;
     @Value("${page.product}")
     private String pageProduct;
     @Value("${page.static}")
@@ -63,6 +62,10 @@ public class CommonService {
                 return path;
             }
 
+            String queryPart = request.getQueryString();
+
+            String fullUrl = request.getRequestURL().toString() + (queryPart != null ? "?" + queryPart : "");
+
             if (path.contains("diamond-rings/classic-solitaire")) {
                 String replaceLink = path.replace("diamond-rings/classic-solitaire", "engagement-rings/classic-solitaire");
 
@@ -78,11 +81,39 @@ public class CommonService {
                 }
             }
 
+//            if (fullUrl.toLowerCase().contains("manufacturer")) {
+//                String sslUrl = request.getScheme() + "://" + request.getServerName();
+//                if ((request.getScheme().equals("http") && request.getServerPort() != 80) ||
+//                        (request.getScheme().equals("https") && request.getServerPort() != 443)) {
+//                    sslUrl += ":" + request.getServerPort();
+//                }
+//
+//                try {
+//                    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+//                    response.setHeader("Location", sslUrl);
+//                    response.flushBuffer();
+//                    return null;
+//                } catch (Exception e) {
+//                    log.error("Error while redirecting to SSL URL: {}", e.getMessage(), e);
+//                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirection failed");
+//                    return null;
+//                }
+//            }
+//
+//            String redirectTo = fetchRedirectUrl(path);
+//
+//            if (redirectTo != null && !redirectTo.isEmpty()) {
+//                if (queryPart != null) {
+//                    redirectTo += "?" + queryPart;
+//                }
+//
+//                response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+//                response.setHeader("Location", redirectTo);
+//                response.flushBuffer();
+//            }
 
             String fragment = null;
-            String queryPart = request.getQueryString();
 
-            String fullUrl = request.getRequestURL().toString() + (queryPart != null ? "?" + queryPart : "");
             if (fullUrl.contains("#")) {
                 fragment = fullUrl.substring(fullUrl.indexOf("#"));
                 fullUrl = fullUrl.substring(0, fullUrl.indexOf("#"));
@@ -118,16 +149,37 @@ public class CommonService {
 
                 List<SeoDataResponseDTO> pageFind = fetchSeoData(List.of(pathParts.get(0)), storeId, languageId, "keyword");
 
-                if (pathParts.get(0).equals("product") || pathParts.get(0).equals("blog") || !pageFind.isEmpty()) {
+                if (pathParts.get(0).equals("product")
+                        || pathParts.get(0).equals("blog")
+                        || pathParts.get(0).equals("customer-story")
+                        || pathParts.get(0).equals("authors")
+                        || !pageFind.isEmpty()) {
                     String key = "";
-                    if (!pageFind.isEmpty()) {
-                        key = pageFind.get(0).getKey();
-                    } else if (pathParts.get(0).equals("product")) {
-                        key = "product_id";
-                        pathParts.remove(0);
-                    } else if (pathParts.get(0).equals("blog")) {
-                        key = "article_id";
-                        pathParts.remove(0);
+
+                    switch (pathParts.get(0)) {
+                        case "product" -> {
+                            key = "product_id";
+                            pathParts.remove(0);
+                        }
+                        case "blog" -> {
+                            key = "wait";
+                            pathParts.remove(0);
+                        }
+                        case "customer-story" -> {
+                            key = "customer_story_id";
+                            pathParts.remove(0);
+                        }
+                        case "authors" -> {
+                            key = "author_id";
+                            pathParts.remove(0);
+                        }
+                        default -> key = pageFind.get(0).getKey();
+                    }
+
+                    List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
+
+                    if ("wait".equals(key) && !dataList.isEmpty()) {
+                        key = dataList.get(0).getKey();
                     }
 
                     page = switch (key) {
@@ -138,12 +190,9 @@ public class CommonService {
                         case "author_id" -> pageAuthor;
                         case "blog_category_id" -> pageBlogCategory;
                         case "customer_story_id" -> pageCustomerStory;
-                        case "product_feed_id" -> pageProductFeed;
                         case "static_page_id" -> pageStatic;
                         default -> pageDefault;
                     };
-
-                    List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
 
                     //condition: bread crumbs
                     if (pathParts.size() >= 2) {
@@ -265,6 +314,11 @@ public class CommonService {
             return "/internal/";
         }
     }
+
+//    private String fetchRedirectUrl(String path) {
+//        //todo
+//        return null;
+//    }
 
     private String fetchSortValue(String sortValue, String orderValue) {
         if (sortValue == null) return null;

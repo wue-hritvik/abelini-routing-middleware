@@ -1,6 +1,9 @@
 package com.abelini_routing_middleware.controller;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Controller;
@@ -25,15 +28,18 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Log4j2
 @Controller
 @RequestMapping("/")
 public class HealthController {
 
     private final ApplicationContext applicationContext;
+    private final CacheManager cacheManager;
 
     @Autowired
-    public HealthController(ApplicationContext applicationContext) {
+    public HealthController(ApplicationContext applicationContext, CacheManager cacheManager) {
         this.applicationContext = applicationContext;
+        this.cacheManager = cacheManager;
     }
 
     @GetMapping("/health")
@@ -128,6 +134,31 @@ public class HealthController {
             appResource.put("threadPoolInfo", "Not available or not configured.");
         }
 
+        try {
+            Map<String, Object> cacheStats = new HashMap<>();
+            if (cacheManager instanceof CaffeineCacheManager caffeineCacheManager) {
+                for (String cacheName : caffeineCacheManager.getCacheNames()) {
+                    var springCache = caffeineCacheManager.getCache(cacheName);
+                    if (springCache == null) continue;
+
+                    Object nativeObj = springCache.getNativeCache();
+                    if (nativeObj instanceof com.github.benmanes.caffeine.cache.Cache<?, ?> nativeCache) {
+                        var stats = nativeCache.stats();
+                        cacheStats.put(cacheName, Map.of(
+                                "hitCount", stats.hitCount(),
+                                "missCount", stats.missCount(),
+                                "loadSuccessCount", stats.loadSuccessCount(),
+                                "loadFailureCount", stats.loadFailureCount(),
+                                "evictionCount", stats.evictionCount(),
+                                "hitRate", String.format("%.2f", stats.hitRate() * 100)
+                        ));
+                    }
+                }
+            }
+            model.addAttribute("cacheStats", cacheStats);
+        } catch (Exception e) {
+            log.warn("Failed to collect cache stats", e);
+        }
 
         model.addAttribute("timestamp", ZonedDateTime.now(ZoneId.of("Asia/Kolkata")).format(DateTimeFormatter.ofPattern("dd MMM yyyy hh:mm:ss a")));
         model.addAttribute("apiStatus", "UP");
