@@ -38,6 +38,8 @@ public class CommonService {
     private String pageCategory;
     @Value("${page.customer.story}")
     private String pageCustomerStory;
+    @Value("${page.customer.story.key}")
+    private String pageCustomerStoryKey;
     @Value("${page.information}")
     private String pageInformation;
     @Value("${page.product}")
@@ -162,11 +164,11 @@ public class CommonService {
                             pathParts.remove(0);
                         }
                         case "blog" -> {
-                            key = "wait";
+                            key = "blog";
                             pathParts.remove(0);
                         }
                         case "customer-story" -> {
-                            key = "customer_story_id";
+                            key = "customer_story";
                             pathParts.remove(0);
                         }
                         case "authors" -> {
@@ -178,7 +180,7 @@ public class CommonService {
 
                     List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
 
-                    if ("wait".equals(key) && !dataList.isEmpty()) {
+                    if (("blog".equals(key) || "customer_story".equals(key)) && !dataList.isEmpty()) {
                         key = dataList.get(0).getKey();
                     }
 
@@ -188,8 +190,9 @@ public class CommonService {
                         case "article_id" -> pageArticle;
                         case "information_id" -> pageInformation;
                         case "author_id" -> pageAuthor;
-                        case "blog_category_id" -> pageBlogCategory;
-                        case "customer_story_id" -> pageCustomerStory;
+                        case "blog_category_id", "blog" -> pageBlogCategory;
+                        case "customer_story_id" -> pageCustomerStoryKey;
+                        case "customer_story" -> pageCustomerStory;
                         case "static_page_id" -> pageStatic;
                         default -> pageDefault;
                     };
