@@ -53,7 +53,8 @@ public class CommonService {
         this.objectMapper = objectMapper;
     }
 
-    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
+    //todo enable cashing
+    //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("convert seo to url");

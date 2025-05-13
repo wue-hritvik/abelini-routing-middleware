@@ -27,7 +27,7 @@ public class Config {
 
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .maximumSize(500000)  // Max number of entries in cache set to 5 lakh
-                .expireAfterWrite(7, TimeUnit.DAYS) // Expiry after 7 days
+                .expireAfterWrite(1, TimeUnit.DAYS) // Expiry after 1 days
                 .recordStats() // stats
         );
 
