@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +54,7 @@ public class CommonController {
         int port = request.getServerPort();
 
         String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+        //String baseUrl = "https://abelane.com";
         String completeUrl = baseUrl + targetUrl;
 
         log.info("complete url: " + completeUrl);
@@ -99,6 +101,11 @@ public class CommonController {
                 log.info("redirect header found");
 //                continue; // Skip redirection headers if necessary
             }
+            if ("Connection".equalsIgnoreCase(headerKey)
+                    || "Keep-Alive".equalsIgnoreCase(headerKey)
+                    || "Transfer-Encoding".equalsIgnoreCase(headerKey)) {
+                continue; // These will be set automatically or already handled
+            }
 //            if ("X-Robots-Tag".equalsIgnoreCase(headerKey)) {
 //                continue;
 //            }
@@ -107,17 +114,18 @@ public class CommonController {
             }
         }
 
-        try (InputStream inputStream = connection.getInputStream();
-             OutputStream outputStream = response.getOutputStream()) {
-
-            // Set 64 kb buffer size for efficient streaming
+        try (InputStream inputStream = connection.getInputStream()) {
+            ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
             byte[] buffer = new byte[65536];
             int bytesRead;
 
-            // Read and write the data in chunks
             while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+                bufferStream.write(buffer, 0, bytesRead);
             }
+
+            byte[] fullResponseBody = bufferStream.toByteArray();
+            response.setContentLength(fullResponseBody.length);
+            response.getOutputStream().write(fullResponseBody);
         } catch (IOException e) {
             log.error("Error while proxying the response", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
