@@ -97,14 +97,15 @@ public class CommonController {
         response.setStatus(responseCode);
 
         for (String headerKey : connection.getHeaderFields().keySet()) {
+            if (headerKey == null) continue;
             if ("Location".equalsIgnoreCase(headerKey)) {
                 log.info("redirect header found");
-//                continue; // Skip redirection headers if necessary
+//                continue;
             }
             if ("Connection".equalsIgnoreCase(headerKey)
                     || "Keep-Alive".equalsIgnoreCase(headerKey)
                     || "Transfer-Encoding".equalsIgnoreCase(headerKey)) {
-                continue; // These will be set automatically or already handled
+                continue;
             }
 //            if ("X-Robots-Tag".equalsIgnoreCase(headerKey)) {
 //                continue;
@@ -114,21 +115,38 @@ public class CommonController {
             }
         }
 
-        try (InputStream inputStream = connection.getInputStream()) {
-            ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[65536];
-            int bytesRead;
-
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                bufferStream.write(buffer, 0, bytesRead);
+        InputStream inputStream = null;
+        try {
+            if (responseCode >= 400) {
+                inputStream = connection.getErrorStream();
+            } else {
+                inputStream = connection.getInputStream();
             }
 
-            byte[] fullResponseBody = bufferStream.toByteArray();
-            response.setContentLength(fullResponseBody.length);
-            response.getOutputStream().write(fullResponseBody);
+            if (inputStream != null) {
+                ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+                byte[] buffer = new byte[65536];
+                int bytesRead;
+                
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    bufferStream.write(buffer, 0, bytesRead);
+                }
+
+                byte[] fullResponseBody = bufferStream.toByteArray();
+                response.setContentLength(fullResponseBody.length);
+                response.getOutputStream().write(fullResponseBody);
+            } else {
+                log.warn("No response body stream available.");
+            }
         } catch (IOException e) {
             log.error("Error while proxying the response", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+            }
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
         }
     }
 
