@@ -125,6 +125,11 @@ public class CommonController {
             }
 
             outputStream.flush();
+        }catch (IOException e) {
+            log.error("Error while proxying the response", e);
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
+            }
         }
     }
 
