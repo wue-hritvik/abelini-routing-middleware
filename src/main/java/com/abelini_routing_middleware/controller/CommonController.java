@@ -1,6 +1,7 @@
 package com.abelini_routing_middleware.controller;
 
 import com.abelini_routing_middleware.CommonService;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,10 +18,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 
 @Log4j2
@@ -115,38 +112,19 @@ public class CommonController {
             }
         }
 
-        InputStream inputStream = null;
-        try {
-            if (responseCode >= 400) {
-                inputStream = connection.getErrorStream();
-            } else {
-                inputStream = connection.getInputStream();
+        try (InputStream inputStream = responseCode >= 400
+                ? connection.getErrorStream()
+                : connection.getInputStream();
+             ServletOutputStream outputStream = response.getOutputStream()) {
+            response.setStatus(responseCode);
+
+            byte[] buffer = new byte[16384];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
             }
 
-            if (inputStream != null) {
-                ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
-                byte[] buffer = new byte[65536];
-                int bytesRead;
-                
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    bufferStream.write(buffer, 0, bytesRead);
-                }
-
-                byte[] fullResponseBody = bufferStream.toByteArray();
-                response.setContentLength(fullResponseBody.length);
-                response.getOutputStream().write(fullResponseBody);
-            } else {
-                log.warn("No response body stream available.");
-            }
-        } catch (IOException e) {
-            log.error("Error while proxying the response", e);
-            if (!response.isCommitted()) {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
-            }
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
+            outputStream.flush();
         }
     }
 
