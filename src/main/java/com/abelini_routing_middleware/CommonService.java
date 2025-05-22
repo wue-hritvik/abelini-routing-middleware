@@ -49,6 +49,14 @@ public class CommonService {
     @Value("${page.default}")
     private String pageDefault;
 
+    private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.of(
+            "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
+            "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
+            "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
+            "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
+            "/pendants", "/internal/information-article.html?static_page_id=156693299540"
+    );
+
     public CommonService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
@@ -63,6 +71,11 @@ public class CommonService {
 
             if (path.startsWith("/internal")) {
                 return path;
+            }
+
+            String mappedUrl = SEO_PATH_TO_INTERNAL_URL.get(path);
+            if (mappedUrl != null) {
+                return mappedUrl;
             }
 
             String queryPart = request.getQueryString();
