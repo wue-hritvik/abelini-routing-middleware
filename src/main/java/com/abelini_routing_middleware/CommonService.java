@@ -27,6 +27,8 @@ public class CommonService {
 
     @Value("${seo.data.api.url}")
     private String API_URL;
+    @Value("${abelini_jwt_token}")
+    public String jwtTokenAbelini;
 
     @Value("${page.article}")
     private String pageArticle;
@@ -50,12 +52,12 @@ public class CommonService {
     private String pageDefault;
 
     private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.of(
-           // "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
-           // "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
-           // "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
-           // "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
-           // "/pendants", "/internal/information-article.html?static_page_id=156693299540",
-	    "/engagement-rings/view-all", "/internal/information-article.php?static_page_id=156697461076",
+            // "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
+            // "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
+            // "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
+            // "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
+            // "/pendants", "/internal/information-article.html?static_page_id=156693299540",
+            "/engagement-rings/view-all", "/internal/information-article.php?static_page_id=156697461076",
             "/diamond-rings/eternity-rings/view-all", "/internal/information-article.php?static_page_id=156702015828",
             "/diamond-rings", "/internal/information-article.php?static_page_id=156698673492",
             "/earrings/view-all", "/internal/information-article.php?static_page_id=156717547860",
@@ -389,6 +391,7 @@ public class CommonService {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
                     .header("Content-Type", "application/json")
+                    .header("Authorization", jwtTokenAbelini)
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
 
