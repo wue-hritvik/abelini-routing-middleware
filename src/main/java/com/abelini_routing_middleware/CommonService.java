@@ -50,11 +50,16 @@ public class CommonService {
     private String pageDefault;
 
     private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.of(
-            "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
-            "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
-            "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
-            "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
-            "/pendants", "/internal/information-article.html?static_page_id=156693299540"
+           // "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
+           // "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
+           // "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
+           // "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
+           // "/pendants", "/internal/information-article.html?static_page_id=156693299540",
+	    "/engagement-rings/view-all", "/internal/information-article.php?static_page_id=156697461076",
+            "/diamond-rings/eternity-rings/view-all", "/internal/information-article.php?static_page_id=156702015828",
+            "/diamond-rings", "/internal/information-article.php?static_page_id=156698673492",
+            "/earrings/view-all", "/internal/information-article.php?static_page_id=156717547860",
+            "/pendants", "/internal/information-article.php?static_page_id=156693299540"
     );
 
     public CommonService(ObjectMapper objectMapper) {
