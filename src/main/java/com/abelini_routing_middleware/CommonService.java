@@ -50,18 +50,34 @@ public class CommonService {
     private String pageStatic;
     @Value("${page.default}")
     private String pageDefault;
+    @Value("${page.address.form}")
+    private String pageAddressForm;
+    @Value("${page.order.info}")
+    private String pageOrderInfo;
+    @Value("${page.complete.review}")
+    private String pageCompleteReview;
 
-    private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.of(
-            // "/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076",
-            // "/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828",
-            // "/diamond-rings", "/internal/information-article.html?static_page_id=156698673492",
-            // "/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860",
-            // "/pendants", "/internal/information-article.html?static_page_id=156693299540",
-            "/engagement-rings/view-all", "/internal/information-article.php?static_page_id=156697461076",
-            "/diamond-rings/eternity-rings/view-all", "/internal/information-article.php?static_page_id=156702015828",
-            "/diamond-rings", "/internal/information-article.php?static_page_id=156698673492",
-            "/earrings/view-all", "/internal/information-article.php?static_page_id=156717547860",
-            "/pendants", "/internal/information-article.php?static_page_id=156693299540"
+    private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.ofEntries(
+            // Map.entry("/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076"),
+            // Map.entry("/diamond-rings/eternity-rings/view-all", "/internal/information-article.html?static_page_id=156702015828"),
+            // Map.entry("/diamond-rings", "/internal/information-article.html?static_page_id=156698673492"),
+            // Map.entry("/earrings/view-all", "/internal/information-article.html?static_page_id=156717547860"),
+            // Map.entry("/pendants", "/internal/information-article.html?static_page_id=156693299540"),
+
+            Map.entry("/engagement-rings/view-all", "/internal/information-article.php?static_page_id=156697461076"),
+            Map.entry("/diamond-rings/eternity-rings/view-all", "/internal/information-article.php?static_page_id=156702015828"),
+            Map.entry("/diamond-rings", "/internal/information-article.php?static_page_id=156698673492"),
+            Map.entry("/earrings/view-all", "/internal/information-article.php?static_page_id=156717547860"),
+            Map.entry("/pendants", "/internal/information-article.php?static_page_id=156693299540"),
+
+            Map.entry("/login", "/internal/login.php"),
+            Map.entry("/not-found", "/internal/not-found.php"),
+            Map.entry("/start-with-setting", "/internal/start-with-setting.php"),
+            Map.entry("/account/order-list", "/internal/account/order-list.php"),
+            Map.entry("/checkout/cart", "/internal/checkout/cart.php"),
+            Map.entry("/checkout/wishlist", "/internal/checkout/wishlist.php"),
+            Map.entry("/choose-diamond", "/internal/choose-diamond.php"),
+            Map.entry("/account/address-list", "/internal/account/address-list.php")
     );
 
     public CommonService(ObjectMapper objectMapper) {
@@ -176,6 +192,8 @@ public class CommonService {
                         || pathParts.get(0).equals("blog")
                         || pathParts.get(0).equals("customer-story")
                         || pathParts.get(0).equals("authors")
+                        || pathParts.get(0).equals("account")
+                        || pathParts.get(0).equals("complete-review")
                         || !pageFind.isEmpty()) {
                     String key = "";
 
@@ -196,6 +214,17 @@ public class CommonService {
                             key = "author_id";
                             pathParts.remove(0);
                         }
+                        case "account" -> {
+                            pathParts.remove("account");
+                            String subPath = pathParts.get(0);
+                            if (subPath != null) {
+                                switch (subPath) {
+                                    case "address-form" -> key = "address_id";
+                                    case "order-info" -> key = "order_id";
+                                }
+                            }
+                        }
+                        case "complete-review" -> key = "complete-review_id";
                         default -> key = pageFind.get(0).getKey();
                     }
 
@@ -215,6 +244,9 @@ public class CommonService {
                         case "customer_story_id" -> pageCustomerStoryKey;
                         case "customer_story" -> pageCustomerStory;
                         case "static_page_id" -> pageStatic;
+                        case "address_id" -> pageAddressForm;
+                        case "order_id" -> pageOrderInfo;
+                        case "complete-review_id" -> pageCompleteReview;
                         default -> pageDefault;
                     };
 
