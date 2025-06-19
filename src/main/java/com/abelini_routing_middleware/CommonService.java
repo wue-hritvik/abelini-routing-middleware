@@ -77,7 +77,9 @@ public class CommonService {
             Map.entry("/checkout/cart", "/internal/checkout/cart.php"),
             Map.entry("/checkout/wishlist", "/internal/checkout/wishlist.php"),
             Map.entry("/choose-diamond", "/internal/choose-diamond.php"),
-            Map.entry("/account/address-list", "/internal/account/address-list.php")
+            Map.entry("/account/address-list", "/internal/account/address-list.php"),
+
+            Map.entry("product/bespoke", "/internal/product/bespoke.php")
     );
 
     public CommonService(ObjectMapper objectMapper) {
