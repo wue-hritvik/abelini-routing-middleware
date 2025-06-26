@@ -56,6 +56,8 @@ public class CommonService {
     private String pageOrderInfo;
     @Value("${page.complete.review}")
     private String pageCompleteReview;
+    @Value("${page.diamond.details}")
+    private String pageDiamondDetails;
 
     private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.ofEntries(
             // Map.entry("/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076"),
@@ -196,6 +198,7 @@ public class CommonService {
                         || pathParts.get(0).equals("authors")
                         || pathParts.get(0).equals("account")
                         || pathParts.get(0).equals("complete-review")
+                        || pathParts.get(0).equals("diamond-details")
                         || !pageFind.isEmpty()) {
                     String key = "";
 
@@ -227,6 +230,7 @@ public class CommonService {
                             }
                         }
                         case "complete-review" -> key = "complete-review_id";
+                        case "diamond-details" -> key = "diamond-details_id";
                         default -> key = pageFind.get(0).getKey();
                     }
 
@@ -249,6 +253,7 @@ public class CommonService {
                         case "address_id" -> pageAddressForm;
                         case "order_id" -> pageOrderInfo;
                         case "complete-review_id" -> pageCompleteReview;
+                        case "diamond-details_id" -> pageDiamondDetails;
                         default -> pageDefault;
                     };
 
