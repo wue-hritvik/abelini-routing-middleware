@@ -81,7 +81,15 @@ public class CommonService {
             Map.entry("/choose-diamond", "/internal/choose-diamond.php"),
             Map.entry("/account/address-list", "/internal/account/address-list.php"),
 
-            Map.entry("/product/bespoke", "/internal/product/bespoke.php")
+            Map.entry("/product/bespoke", "/internal/product/bespoke.php"),
+
+            Map.entry("/sitemap/engagement-rings", "/internal/sitemap/sitemap_list.php?category_id=1"),
+            Map.entry("/sitemap/diamond-rings", "/internal/sitemap/sitemap_list.php?category_id=2"),
+            Map.entry("/sitemap/wedding-rings", "/internal/sitemap/sitemap_list.php?category_id=3"),
+            Map.entry("/sitemap/earrings", "/internal/sitemap/sitemap_list.php?category_id=4"),
+            Map.entry("/sitemap/pendants", "/internal/sitemap/sitemap_list.php?category_id=5"),
+            Map.entry("/sitemap/bracelets", "/internal/sitemap/sitemap_list.php?category_id=6"),
+            Map.entry("/sitemap", "/internal/sitemap/sitemap.php")
     );
 
     public CommonService(ObjectMapper objectMapper) {
