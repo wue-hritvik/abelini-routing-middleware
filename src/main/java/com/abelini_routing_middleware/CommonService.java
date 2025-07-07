@@ -108,12 +108,17 @@ public class CommonService {
                 return path;
             }
 
+            String queryPart = request.getQueryString();
+            String hitUrl = (request.getRequestURL() + (queryPart != null ? "?" + queryPart : "")).replace("/routing-value", "");
+            String hitUrlPathFull = request.getRequestURI().replace("/routing-value", "") + (queryPart != null ? "?" + queryPart : "");
+            response.setHeader("hitUrl", hitUrl);
+            response.setHeader("hitUrlPath", request.getRequestURI().replace("/routing-value", ""));
+            response.setHeader("hitUrlPathFull", hitUrlPathFull);
+
             String mappedUrl = SEO_PATH_TO_INTERNAL_URL.get(path);
             if (mappedUrl != null) {
                 return mappedUrl;
             }
-
-            String queryPart = request.getQueryString();
 
             String fullUrl = request.getRequestURL().toString() + (queryPart != null ? "?" + queryPart : "");
 
@@ -201,13 +206,13 @@ public class CommonService {
                 List<SeoDataResponseDTO> pageFind = fetchSeoData(List.of(pathParts.get(0)), storeId, languageId, "keyword");
 
                 if (pathParts.get(0).equals("product")
-                        || pathParts.get(0).equals("blog")
-                        || pathParts.get(0).equals("customer-story")
-                        || pathParts.get(0).equals("authors")
-                        || pathParts.get(0).equals("account")
-                        || pathParts.get(0).equals("complete-review")
-                        || pathParts.get(0).equals("diamond-details")
-                        || !pageFind.isEmpty()) {
+                    || pathParts.get(0).equals("blog")
+                    || pathParts.get(0).equals("customer-story")
+                    || pathParts.get(0).equals("authors")
+                    || pathParts.get(0).equals("account")
+                    || pathParts.get(0).equals("complete-review")
+                    || pathParts.get(0).equals("diamond-details")
+                    || !pageFind.isEmpty()) {
                     String key = "";
 
                     switch (pathParts.get(0)) {
@@ -319,7 +324,7 @@ public class CommonService {
                             .filter(Objects::nonNull)
                             .filter(k -> !k.isBlank())
                             .collect(Collectors.toCollection(LinkedHashSet::new));
-                    request.setAttribute("resolved_keywords",keywords);
+                    request.setAttribute("resolved_keywords", keywords);
 
                     response.setHeader("X-Keywords", String.join(",", keywords));
 
