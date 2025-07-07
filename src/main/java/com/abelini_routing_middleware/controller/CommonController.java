@@ -171,8 +171,7 @@ public class CommonController {
 
             return ResponseEntity
                     .ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(json.toString(2));
+                    .body(json.toString());
 
         } catch (Exception e) {
             log.error("Error while proxying the response", e);
