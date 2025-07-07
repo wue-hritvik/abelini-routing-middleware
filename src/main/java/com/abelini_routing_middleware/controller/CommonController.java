@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -140,41 +141,57 @@ public class CommonController {
 
             String targetUrl = commonService.resolveSeoToQuery(request, response);
 
-            if (response.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY ||
-                    response.getStatus() == HttpServletResponse.SC_FOUND) {
+            int status = response.getStatus();
+            if (status == HttpServletResponse.SC_MOVED_PERMANENTLY || status == HttpServletResponse.SC_FOUND) {
                 log.info("Redirect already handled, returning early.");
                 return null;
             }
 
             String host = request.getServerName();
             int port = request.getServerPort();
-            String baseUrl = "https://" + host + (port == 80 || port == 443 ? "" : ":" + port);
+            String baseUrl = "https://" + host + ((port == 80 || port == 443) ? "" : ":" + port);
             String completeUrl = baseUrl + targetUrl;
 
             URI uri = URI.create(completeUrl);
             String fullPath = uri.getPath().replaceFirst("^/internal", "");
 
-            Map<String, String> queryParams = new LinkedHashMap<>();
-            if (uri.getQuery() != null) {
-                Arrays.stream(uri.getQuery().split("&"))
-                        .map(param -> param.split("=", 2))
-                        .forEach(pair -> {
-                            String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
-                            String value = pair.length > 1 ? URLDecoder.decode(pair[1], StandardCharsets.UTF_8) : "";
-                            queryParams.put(key, value);
-                        });
-            }
+            Map<String, String> queryParams = parseQueryParams(uri.getQuery());
 
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("url", completeUrl);
-            jsonObject.put("path", fullPath);
-            queryParams.forEach(jsonObject::put);
+            String queryString = request.getQueryString();
+            String hitUrl = (request.getRequestURL() + (queryString != null ? "?" + queryString : "")).replace("/routing-value", "");
+            String hitUrlPath = request.getRequestURI().replace("/routing-value", "") + (queryString != null ? "?" + queryString : "");
 
-            return ResponseEntity.ok(jsonObject.toString());
+            // Prepare response
+            JSONObject json = new JSONObject();
+            json.put("url", completeUrl);
+            json.put("path", fullPath);
+            json.put("hitUrl", hitUrl);
+            json.put("hitUrlPath", hitUrlPath);
+            queryParams.forEach(json::put);
+
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(json.toString(2));
+
         } catch (Exception e) {
             log.error("Error while proxying the response", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
             return null;
         }
+    }
+
+    private Map<String, String> parseQueryParams(String query) {
+        Map<String, String> params = new LinkedHashMap<>();
+        if (query != null && !query.isEmpty()) {
+            Arrays.stream(query.split("&"))
+                    .map(p -> p.split("=", 2))
+                    .forEach(pair -> {
+                        String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+                        String value = pair.length > 1 ? URLDecoder.decode(pair[1], StandardCharsets.UTF_8) : "";
+                        params.put(key, value);
+                    });
+        }
+        return params;
     }
 }
