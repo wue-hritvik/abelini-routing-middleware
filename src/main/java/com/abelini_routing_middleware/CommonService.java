@@ -314,6 +314,12 @@ public class CommonService {
                         }
                     }
 
+                    request.setAttribute("resolved_keywords", dataList.stream()
+                            .map(SeoDataResponseDTO::getKeyword)
+                            .filter(Objects::nonNull)
+                            .filter(k -> !k.isBlank())
+                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+
                     for (SeoDataResponseDTO data : dataList) {
                         filterMap.computeIfAbsent(data.getKey(), k -> new ArrayList<>()).add(data.getShopifyId());
                     }

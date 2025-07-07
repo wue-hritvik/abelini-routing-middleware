@@ -5,6 +5,7 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -168,6 +169,20 @@ public class CommonController {
             json.put("hitUrl", hitUrl);
             json.put("hitUrlPath", hitUrlPath);
             queryParams.forEach(json::put);
+
+            @SuppressWarnings("unchecked")
+            Set<String> keywords = (Set<String>) request.getAttribute("resolved_keywords");
+            if (keywords == null || keywords.isEmpty()) {
+                json.put("keywords", new JSONArray());
+            } else {
+                JSONArray keywordArray = new JSONArray();
+                for (String keyword : keywords) {
+                    if (keyword != null && !keyword.isBlank()) {
+                        keywordArray.put(keyword);
+                    }
+                }
+                json.put("keywords", keywordArray);
+            }
 
             return ResponseEntity
                     .ok()
