@@ -314,11 +314,14 @@ public class CommonService {
                         }
                     }
 
-                    request.setAttribute("resolved_keywords", dataList.stream()
+                    Set<String> keywords = dataList.stream()
                             .map(SeoDataResponseDTO::getKeyword)
                             .filter(Objects::nonNull)
                             .filter(k -> !k.isBlank())
-                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
+                    request.setAttribute("resolved_keywords",keywords);
+
+                    response.setHeader("X-Keywords", String.join(",", keywords));
 
                     for (SeoDataResponseDTO data : dataList) {
                         filterMap.computeIfAbsent(data.getKey(), k -> new ArrayList<>()).add(data.getShopifyId());
