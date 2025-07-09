@@ -321,7 +321,7 @@ public class CommonService {
                             .filter(Objects::nonNull)
                             .filter(k -> !k.isBlank())
                             .collect(Collectors.toCollection(LinkedHashSet::new));
-		    request.setAttribute("resolved_keywords", keywords);
+		            request.setAttribute("resolved_keywords", keywords);
                     response.setHeader("X-Keywords", String.join(",", keywords));
 
                     for (SeoDataResponseDTO data : dataList) {

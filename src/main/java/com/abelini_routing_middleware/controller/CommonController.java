@@ -44,7 +44,7 @@ public class CommonController {
         String targetUrl = commonService.resolveSeoToQuery(request, response);
         log.info("target url inside proxy ::: {}", targetUrl);
         if (response.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY ||
-                response.getStatus() == HttpServletResponse.SC_FOUND) {
+            response.getStatus() == HttpServletResponse.SC_FOUND) {
             log.info("Redirect already handled, returning early.");
             return;
         }
@@ -71,8 +71,8 @@ public class CommonController {
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
             if ("Connection".equalsIgnoreCase(headerName) ||
-                    "Keep-Alive".equalsIgnoreCase(headerName) ||
-                    "Transfer-Encoding".equalsIgnoreCase(headerName)) {
+                "Keep-Alive".equalsIgnoreCase(headerName) ||
+                "Transfer-Encoding".equalsIgnoreCase(headerName)) {
                 continue;
             }
             connection.setRequestProperty(headerName, request.getHeader(headerName));
@@ -102,8 +102,8 @@ public class CommonController {
 //                continue;
             }
             if ("Connection".equalsIgnoreCase(headerKey)
-                    || "Keep-Alive".equalsIgnoreCase(headerKey)
-                    || "Transfer-Encoding".equalsIgnoreCase(headerKey)) {
+                || "Keep-Alive".equalsIgnoreCase(headerKey)
+                || "Transfer-Encoding".equalsIgnoreCase(headerKey)) {
                 continue;
             }
 //            if ("X-Robots-Tag".equalsIgnoreCase(headerKey)) {
@@ -128,7 +128,7 @@ public class CommonController {
             }
 
             outputStream.flush();
-        }catch (IOException e) {
+        } catch (IOException e) {
             log.error("Error while proxying the response", e);
             if (!response.isCommitted()) {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while processing request.");
@@ -164,7 +164,7 @@ public class CommonController {
             String queryString = request.getQueryString();
             String hitUrl = (request.getRequestURL() + (queryString != null ? "?" + queryString : "")).replace("/routing-value", "");
             String hitUrlPath = request.getRequestURI().replace("/routing-value", "") + (queryString != null ? "?" + queryString : "");
-            String hitKeyword = queryString!=null?queryString.substring(queryString.indexOf("hitUrlKeyword=")):"";
+            String hitKeyword = queryString != null ? queryString.substring(queryString.indexOf("hitUrlKeyword=")) : queryParams.getOrDefault("hitUrlKeyword", "");
             log.info("keyword {}", hitKeyword);
 
             // Prepare response
