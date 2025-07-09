@@ -164,7 +164,17 @@ public class CommonController {
             String queryString = request.getQueryString();
             String hitUrl = (request.getRequestURL() + (queryString != null ? "?" + queryString : "")).replace("/routing-value", "");
             String hitUrlPath = request.getRequestURI().replace("/routing-value", "") + (queryString != null ? "?" + queryString : "");
-            String hitKeyword = queryString != null ? queryString.substring(queryString.indexOf("hitUrlKeyword=")) : queryParams.getOrDefault("hitUrlKeyword", "");
+            String hitKeyword = "";
+            if (queryString != null) {
+                int idx = queryString.indexOf("hitUrlKeyword=");
+                if (idx != -1) {
+                    hitKeyword = queryString.substring(idx);
+                } else {
+                    hitKeyword = queryParams.getOrDefault("hitUrlKeyword", "");
+                }
+            } else {
+                hitKeyword = queryParams.getOrDefault("hitUrlKeyword", "");
+            }
             log.info("keyword {}", hitKeyword);
 
             // Prepare response

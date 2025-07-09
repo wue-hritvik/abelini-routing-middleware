@@ -58,6 +58,8 @@ public class CommonService {
     private String pageCompleteReview;
     @Value("${page.diamond.details}")
     private String pageDiamondDetails;
+    @Value("${page.search}")
+    private String pageSearch;
 
     private static final Map<String, String> SEO_PATH_TO_INTERNAL_URL = Map.ofEntries(
             // Map.entry("/engagement-rings/view-all", "/internal/information-article.html?static_page_id=156697461076"),
@@ -202,6 +204,7 @@ public class CommonService {
                     || pathParts.get(0).equals("account")
                     || pathParts.get(0).equals("complete-review")
                     || pathParts.get(0).equals("diamond-details")
+                    || pathParts.get(0).equals("search")
                     || !pageFind.isEmpty()) {
                     String key = "";
 
@@ -234,6 +237,18 @@ public class CommonService {
                         }
                         case "complete-review" -> key = "complete-review_id";
                         case "diamond-details" -> key = "diamond-details_id";
+                        case "search" -> {
+                            pathParts.remove(0);
+                            key = "search_id";
+                            if (!pathParts.isEmpty()) {
+                                String searchQuery = path.replace("/search/", "");
+                                if (queryPart == null || queryPart.isEmpty()) {
+                                    queryPart = "q=" +searchQuery;
+                                } else {
+                                    queryPart += "&q=" + searchQuery;
+                                }
+                            }
+                        }
                         default -> key = pageFind.get(0).getKey();
                     }
 
@@ -257,6 +272,7 @@ public class CommonService {
                         case "order_id" -> pageOrderInfo;
                         case "complete-review_id" -> pageCompleteReview;
                         case "diamond-details_id" -> pageDiamondDetails;
+                        case "search_id" -> pageSearch;
                         default -> pageDefault;
                     };
 
@@ -302,8 +318,8 @@ public class CommonService {
                                 .toList();
 
 
-                        if(rawQueryParams.containsKey("filter_param")){
-                            List tempArr = new ArrayList();
+                        if (rawQueryParams.containsKey("filter_param")) {
+                            List<String> tempArr = new ArrayList<>();
                             tempArr.add(rawQueryParams.get("filter_param"));
                             filterMap.put("filter_param", tempArr);
                         }
@@ -321,7 +337,7 @@ public class CommonService {
                             .filter(Objects::nonNull)
                             .filter(k -> !k.isBlank())
                             .collect(Collectors.toCollection(LinkedHashSet::new));
-		            request.setAttribute("resolved_keywords", keywords);
+                    request.setAttribute("resolved_keywords", keywords);
                     response.setHeader("X-Keywords", String.join(",", keywords));
 
                     for (SeoDataResponseDTO data : dataList) {
