@@ -103,21 +103,41 @@ public class CommonService {
             log.info("convert seo to url {}", request.getRequestURI());
 
             String path = request.getRequestURI().replace("/routing-value", "");
+            String queryPart = request.getQueryString();
+            if (!request.getRequestURI().startsWith("/routing-value")) {
+                log.info("inside startswith");
+
+                if (queryPart == null || queryPart.isEmpty()) {
+                    queryPart = "hitUrlKeyword=" + request.getRequestURI();
+                } else {
+                    queryPart += "&hitUrlKeyword=" + request.getRequestURI();
+                }
+            }
 
             if (path.startsWith("/internal")) {
+                if (queryPart == null || queryPart.isEmpty()) {
+                    if (path.contains("?")) {
+                        path += "&" + queryPart;
+                    } else {
+                        path += "?" + queryPart;
+                    }
+                }
                 return path;
             }
             log.info("hitUrlKeyword inside resolveSeoToQuery ::: {}", request.getRequestURI());
-            String queryPart = request.getQueryString();
             String hitUrl = (request.getRequestURL() + (queryPart != null ? "?" + queryPart : "")).replace("/routing-value", "");
             String hitUrlPathFull = request.getRequestURI().replace("/routing-value", "") + (queryPart != null ? "?" + queryPart : "");
             response.setHeader("hitUrl", hitUrl);
             response.setHeader("hitUrlPath", request.getRequestURI().replace("/routing-value", ""));
             response.setHeader("hitUrlPathFull", hitUrlPathFull);
-	    
 
             String mappedUrl = SEO_PATH_TO_INTERNAL_URL.get(path);
             if (mappedUrl != null) {
+                if (mappedUrl.contains("?")) {
+                    mappedUrl += "&" + queryPart;
+                } else {
+                    mappedUrl += "?" + queryPart;
+                }
                 return mappedUrl;
             }
 
@@ -368,14 +388,6 @@ public class CommonService {
             if (fragment != null) {
                 queryString.append(fragment);
             }
-            if(!request.getRequestURI().startsWith("/routing-value")){
-		        log.info("inside startswith");
-                if(queryString.indexOf("?") != -1){
-                    queryString.append("&hitUrlKeyword="+request.getRequestURI());
-                }else{
-                    queryString.append("?hitUrlKeyword="+request.getRequestURI());
-                }
-	        }
 
             return "/internal" + (queryString.toString().startsWith("/") ? queryString : "/" + queryString);
         } catch (Exception e) {
