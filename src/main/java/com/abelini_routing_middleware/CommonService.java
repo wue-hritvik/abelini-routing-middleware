@@ -100,20 +100,21 @@ public class CommonService {
     //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
-            log.info("convert seo to url");
+            log.info("convert seo to url {}", request.getRequestURI());
 
             String path = request.getRequestURI().replace("/routing-value", "");
 
             if (path.startsWith("/internal")) {
                 return path;
             }
-
+            log.info("hitUrlKeyword inside resolveSeoToQuery ::: {}", request.getRequestURI());
             String queryPart = request.getQueryString();
             String hitUrl = (request.getRequestURL() + (queryPart != null ? "?" + queryPart : "")).replace("/routing-value", "");
             String hitUrlPathFull = request.getRequestURI().replace("/routing-value", "") + (queryPart != null ? "?" + queryPart : "");
             response.setHeader("hitUrl", hitUrl);
             response.setHeader("hitUrlPath", request.getRequestURI().replace("/routing-value", ""));
             response.setHeader("hitUrlPathFull", hitUrlPathFull);
+	    
 
             String mappedUrl = SEO_PATH_TO_INTERNAL_URL.get(path);
             if (mappedUrl != null) {
@@ -136,37 +137,6 @@ public class CommonService {
                     return null;
                 }
             }
-
-//            if (fullUrl.toLowerCase().contains("manufacturer")) {
-//                String sslUrl = request.getScheme() + "://" + request.getServerName();
-//                if ((request.getScheme().equals("http") && request.getServerPort() != 80) ||
-//                        (request.getScheme().equals("https") && request.getServerPort() != 443)) {
-//                    sslUrl += ":" + request.getServerPort();
-//                }
-//
-//                try {
-//                    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
-//                    response.setHeader("Location", sslUrl);
-//                    response.flushBuffer();
-//                    return null;
-//                } catch (Exception e) {
-//                    log.error("Error while redirecting to SSL URL: {}", e.getMessage(), e);
-//                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Redirection failed");
-//                    return null;
-//                }
-//            }
-//
-//            String redirectTo = fetchRedirectUrl(path);
-//
-//            if (redirectTo != null && !redirectTo.isEmpty()) {
-//                if (queryPart != null) {
-//                    redirectTo += "?" + queryPart;
-//                }
-//
-//                response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
-//                response.setHeader("Location", redirectTo);
-//                response.flushBuffer();
-//            }
 
             String fragment = null;
 
@@ -311,6 +281,13 @@ public class CommonService {
                                 .distinct()
                                 .toList();
 
+
+                        if(rawQueryParams.containsKey("filter_param")){
+                            List tempArr = new ArrayList();
+                            tempArr.add(rawQueryParams.get("filter_param"));
+                            filterMap.put("filter_param", tempArr);
+                        }
+
                         rawQueryParams.remove("filter_param");
 
                         List<SeoDataResponseDTO> valueList = fetchSeoData(allValueParts, storeId, languageId, "value");
@@ -324,8 +301,7 @@ public class CommonService {
                             .filter(Objects::nonNull)
                             .filter(k -> !k.isBlank())
                             .collect(Collectors.toCollection(LinkedHashSet::new));
-                    request.setAttribute("resolved_keywords", keywords);
-
+		    request.setAttribute("resolved_keywords", keywords);
                     response.setHeader("X-Keywords", String.join(",", keywords));
 
                     for (SeoDataResponseDTO data : dataList) {
@@ -392,6 +368,14 @@ public class CommonService {
             if (fragment != null) {
                 queryString.append(fragment);
             }
+            if(!request.getRequestURI().startsWith("/routing-value")){
+		        log.info("inside startswith");
+                if(queryString.indexOf("?") != -1){
+                    queryString.append("&hitUrlKeyword="+request.getRequestURI());
+                }else{
+                    queryString.append("?hitUrlKeyword="+request.getRequestURI());
+                }
+	        }
 
             return "/internal" + (queryString.toString().startsWith("/") ? queryString : "/" + queryString);
         } catch (Exception e) {
@@ -471,3 +455,4 @@ public class CommonService {
         }
     }
 }
+

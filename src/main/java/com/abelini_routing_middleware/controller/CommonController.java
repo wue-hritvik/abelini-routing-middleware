@@ -42,7 +42,7 @@ public class CommonController {
         }
 
         String targetUrl = commonService.resolveSeoToQuery(request, response);
-
+        log.info("target url inside proxy ::: {}", targetUrl);
         if (response.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY ||
                 response.getStatus() == HttpServletResponse.SC_FOUND) {
             log.info("Redirect already handled, returning early.");
@@ -110,6 +110,7 @@ public class CommonController {
 //                continue;
 //            }
             for (String headerValue : connection.getHeaderFields().get(headerKey)) {
+                log.info("Header inside proxy ::: {} ::: {}", headerKey, headerValue);
                 response.setHeader(headerKey, headerValue);
             }
         }
@@ -139,9 +140,7 @@ public class CommonController {
     public ResponseEntity<?> proxyPathRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             log.info("routing value");
-
             String targetUrl = commonService.resolveSeoToQuery(request, response);
-
             int status = response.getStatus();
             if (status == HttpServletResponse.SC_MOVED_PERMANENTLY || status == HttpServletResponse.SC_FOUND) {
                 log.info("Redirect already handled, returning early.");
@@ -154,13 +153,19 @@ public class CommonController {
             String completeUrl = baseUrl + targetUrl;
 
             URI uri = URI.create(completeUrl);
+            log.info("full path in routing value ::: {}", uri.getPath());
+
             String fullPath = uri.getPath().replaceFirst("^/internal", "");
 
             Map<String, String> queryParams = parseQueryParams(uri.getQuery());
 
+            log.info("all query params in routing value ::: {}", queryParams);
+
             String queryString = request.getQueryString();
             String hitUrl = (request.getRequestURL() + (queryString != null ? "?" + queryString : "")).replace("/routing-value", "");
             String hitUrlPath = request.getRequestURI().replace("/routing-value", "") + (queryString != null ? "?" + queryString : "");
+            String hitKeyword = queryString.substring(queryString.indexOf("hitUrlKeyword="));
+            log.info("keyword {}", hitKeyword);
 
             // Prepare response
             JSONObject json = new JSONObject();
@@ -168,6 +173,7 @@ public class CommonController {
             json.put("path", fullPath);
             json.put("hitUrl", hitUrl);
             json.put("hitUrlPath", hitUrlPath);
+            json.put("hitUrlKeyword", hitKeyword);
             queryParams.forEach(json::put);
 
             @SuppressWarnings("unchecked")
@@ -209,3 +215,4 @@ public class CommonController {
         return params;
     }
 }
+
