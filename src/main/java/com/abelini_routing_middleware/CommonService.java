@@ -119,7 +119,7 @@ public class CommonService {
             }
 
             if (path.startsWith("/internal")) {
-                if (queryPart == null || queryPart.isEmpty()) {
+                if (queryPart != null && !queryPart.isEmpty()) {
                     if (path.contains("?")) {
                         path += "&" + queryPart;
                     } else {
