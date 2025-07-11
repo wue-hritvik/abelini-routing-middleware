@@ -137,10 +137,12 @@ public class CommonService {
 
             String mappedUrl = SEO_PATH_TO_INTERNAL_URL.get(path);
             if (mappedUrl != null) {
-                if (mappedUrl.contains("?")) {
-                    mappedUrl += "&" + queryPart;
-                } else {
-                    mappedUrl += "?" + queryPart;
+                if (queryPart != null && !queryPart.isEmpty()) {
+                    if (mappedUrl.contains("?")) {
+                        mappedUrl += "&" + queryPart;
+                    } else {
+                        mappedUrl += "?" + queryPart;
+                    }
                 }
                 return mappedUrl;
             }
