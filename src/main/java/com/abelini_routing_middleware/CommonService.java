@@ -91,7 +91,9 @@ public class CommonService {
             Map.entry("/sitemap/earrings", "/internal/sitemap/sitemap_list.php?category_id=4"),
             Map.entry("/sitemap/pendants", "/internal/sitemap/sitemap_list.php?category_id=5"),
             Map.entry("/sitemap/bracelets", "/internal/sitemap/sitemap_list.php?category_id=6"),
-            Map.entry("/sitemap", "/internal/sitemap/sitemap.php")
+            Map.entry("/sitemap", "/internal/sitemap/sitemap.php"),
+
+            Map.entry("/account", "/internal/account.php")
     );
 
     public CommonService(ObjectMapper objectMapper) {
