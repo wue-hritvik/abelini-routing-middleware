@@ -115,6 +115,7 @@ public class CommonService {
                     queryPart = "hitUrlKeyword=" + request.getRequestURI();
                 } else {
                     queryPart += "&hitUrlKeyword=" + request.getRequestURI();
+                    queryPart += "&hitUrlQuery=" + request.getQueryString();
                 }
             }
 
@@ -177,6 +178,10 @@ public class CommonService {
             int languageId = 1;
 
             Map<String, List<String>> filterMap = new HashMap<>();
+            String qu = request.getQueryString();
+            if (qu != null && !qu.isEmpty()) {
+                filterMap.put("fullQuery", List.of(qu));
+            }
 
             AtomicReference<String> stoneType = new AtomicReference<>(null);
 
@@ -247,7 +252,7 @@ public class CommonService {
                             if (!pathParts.isEmpty()) {
                                 String searchQuery = path.replace("/search/", "");
                                 if (queryPart == null || queryPart.isEmpty()) {
-                                    queryPart = "q=" +searchQuery;
+                                    queryPart = "q=" + searchQuery;
                                 } else {
                                     queryPart += "&q=" + searchQuery;
                                 }
