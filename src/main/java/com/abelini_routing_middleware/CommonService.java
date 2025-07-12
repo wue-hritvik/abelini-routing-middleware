@@ -116,7 +116,7 @@ public class CommonService {
                     queryPart = "hitUrlKeyword=" + request.getRequestURI();
                 } else {
                     queryPart += "&hitUrlKeyword=" + request.getRequestURI();
-//                    queryPart += "&hitUrlQuery=" + request.getQueryString();
+                    queryPart += "&hitUrlQuery=" + Base64.getEncoder().encodeToString(request.getQueryString().getBytes(StandardCharsets.UTF_8));
                 }
             }
 
