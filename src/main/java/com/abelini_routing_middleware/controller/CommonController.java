@@ -166,10 +166,10 @@ public class CommonController {
             String hitUrlPath = request.getRequestURI().replace("/routing-value", "") + (queryString != null ? "?" + queryString : "");
 
             String hitKeyword = queryParams.getOrDefault("hitUrlKeyword", "");
-            String hitQuery = queryParams.getOrDefault("hitUrlQuery", "");
+            //String hitQuery = queryParams.getOrDefault("hitUrlQuery", "");
 
             log.info("keyword {}", hitKeyword);
-            log.info("query {}", hitQuery);
+            //log.info("query {}", hitQuery);
 
             // Prepare response
             JSONObject json = new JSONObject();
@@ -178,7 +178,7 @@ public class CommonController {
             json.put("hitUrl", hitUrl);
             json.put("hitUrlPath", hitUrlPath);
             json.put("hitUrlKeyword", hitKeyword);
-            json.put("hitUrlQuery", hitQuery);
+            //json.put("hitUrlQuery", hitQuery);
             queryParams.forEach(json::put);
 
             @SuppressWarnings("unchecked")

@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -115,7 +116,7 @@ public class CommonService {
                     queryPart = "hitUrlKeyword=" + request.getRequestURI();
                 } else {
                     queryPart += "&hitUrlKeyword=" + request.getRequestURI();
-                    queryPart += "&hitUrlQuery=" + request.getQueryString();
+//                    queryPart += "&hitUrlQuery=" + request.getQueryString();
                 }
             }
 
@@ -180,7 +181,7 @@ public class CommonService {
             Map<String, List<String>> filterMap = new HashMap<>();
             String qu = request.getQueryString();
             if (qu != null && !qu.isEmpty()) {
-                filterMap.put("fullQuery", List.of(qu));
+                filterMap.put("fullQuery", List.of(Base64.getEncoder().encodeToString(qu.getBytes(StandardCharsets.UTF_8))));
             }
 
             AtomicReference<String> stoneType = new AtomicReference<>(null);
