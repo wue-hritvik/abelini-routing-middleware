@@ -94,7 +94,10 @@ public class CommonService {
             Map.entry("/sitemap/bracelets", "/internal/sitemap/sitemap_list.php?category_id=6"),
             Map.entry("/sitemap", "/internal/sitemap/sitemap.php"),
 
-            Map.entry("/account", "/internal/account.php")
+            Map.entry("/account", "/internal/account.php"),
+
+            Map.entry("/404", "/internal/404.php")
+
     );
 
     public CommonService(ObjectMapper objectMapper) {
@@ -102,7 +105,7 @@ public class CommonService {
     }
 
     //todo enable cashing
-    //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
+    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("convert seo to url {}", request.getRequestURI());
