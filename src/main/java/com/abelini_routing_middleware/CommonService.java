@@ -105,7 +105,7 @@ public class CommonService {
     }
 
     //todo enable cashing
-    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
+    //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("convert seo to url {}", request.getRequestURI());
@@ -206,7 +206,7 @@ public class CommonService {
             StringBuilder queryString = new StringBuilder();
 
             if (!pathParts.isEmpty()) {
-                String page = pageDefault;
+                String page;
 
                 List<SeoDataResponseDTO> pageFind = fetchSeoData(List.of(pathParts.get(0)), storeId, languageId, "keyword");
 
@@ -267,7 +267,15 @@ public class CommonService {
 
                     List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
 
-                    if (("blog".equals(key) || "customer_story".equals(key)) && !dataList.isEmpty()) {
+                    if (dataList == null || dataList.isEmpty() || dataList.size() != pathParts.size()) {
+                        String url404 = "/internal/404.php";
+                        if (queryPart != null && !queryPart.isEmpty()) {
+                            url404 += "?" + queryPart;
+                        }
+                        return url404;
+                    }
+
+                    if ("blog".equals(key) || "customer_story".equals(key)) {
                         key = dataList.get(0).getKey();
                     }
 
