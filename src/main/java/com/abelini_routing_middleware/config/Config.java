@@ -5,6 +5,9 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.client.RestTemplate;
@@ -21,17 +24,28 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class Config {
 
+//    @Bean
+//    public CacheManager cacheManager() {
+//        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+//
+//        cacheManager.setCaffeine(Caffeine.newBuilder()
+//                .maximumSize(500000)  // Max number of entries in cache set to 5 lakh
+//                .expireAfterWrite(1, TimeUnit.DAYS) // Expiry after 1 days
+//                .recordStats() // stats
+//        );
+//
+//        return cacheManager;
+//    }
+
     @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(7))
+                .disableCachingNullValues();
 
-        cacheManager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(500000)  // Max number of entries in cache set to 5 lakh
-                .expireAfterWrite(1, TimeUnit.DAYS) // Expiry after 1 days
-                .recordStats() // stats
-        );
-
-        return cacheManager;
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(config)
+                .build();
     }
 
     @Bean
