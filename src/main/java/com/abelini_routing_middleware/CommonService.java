@@ -110,7 +110,7 @@ public class CommonService {
     }
 
     //todo enable cashing
-    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
+    //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("convert seo to url {}", request.getRequestURI());
