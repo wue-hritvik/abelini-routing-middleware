@@ -1,15 +1,17 @@
 package com.abelini_routing_middleware.controller;
 
 import com.abelini_routing_middleware.CommonService;
+import com.abelini_routing_middleware.dto.CachePurgeRequest;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.IOException;
@@ -62,10 +64,10 @@ public class CommonController {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
 //        connection.setRequestProperty("X-Robots-Tag", "noindex, nofollow");
-
+        connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod(request.getMethod());
         connection.setConnectTimeout(7000); // 7 seconds to connect
-        connection.setReadTimeout(40000); //40 sec
+        connection.setReadTimeout(60000); //60 sec
 
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -80,14 +82,10 @@ public class CommonController {
 
         if ("POST".equalsIgnoreCase(request.getMethod()) || "PUT".equalsIgnoreCase(request.getMethod()) || "PATCH".equalsIgnoreCase(request.getMethod())) {
             connection.setDoOutput(true);
-            try (InputStream inputStream = request.getInputStream();
-                 OutputStream outputStream = connection.getOutputStream()) {
+            try (InputStream input = request.getInputStream();
+                 OutputStream output = connection.getOutputStream()) {
 
-                byte[] buffer = new byte[16384];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
+                input.transferTo(output);
             }
         }
 
@@ -115,19 +113,16 @@ public class CommonController {
             }
         }
 
-        try (InputStream inputStream = responseCode >= 400
-                ? connection.getErrorStream()
-                : connection.getInputStream();
-             ServletOutputStream outputStream = response.getOutputStream()) {
+        try (InputStream in = responseCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+             ServletOutputStream out = response.getOutputStream()) {
+
             response.setStatus(responseCode);
 
-            byte[] buffer = new byte[16384];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+            if (in != null) {
+                in.transferTo(out);
+            } else {
+                log.warn("Proxy InputStream is null for status code: {}", responseCode);
             }
-
-            outputStream.flush();
         } catch (IOException e) {
             log.error("Error while proxying the response", e);
             if (!response.isCommitted()) {
@@ -218,6 +213,13 @@ public class CommonController {
                     });
         }
         return params;
+    }
+
+    @PostMapping("/seo-url/purge-cache")
+    public ResponseEntity<?> purgeCacheUrl(@RequestBody CachePurgeRequest payload,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response) {
+        return commonService.purgeCacheUrl(payload, request, response);
     }
 }
 

@@ -1,5 +1,6 @@
 package com.abelini_routing_middleware;
 
+import com.abelini_routing_middleware.dto.CachePurgeRequest;
 import com.abelini_routing_middleware.dto.SeoDataRequest;
 import com.abelini_routing_middleware.dto.SeoDataResponseDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -8,7 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 public class CommonService {
     private final ObjectMapper objectMapper;
     private final HttpClient client = HttpClient.newHttpClient();
+    private final CacheManager cacheManager;
 
     @Value("${seo.data.api.url}")
     private String API_URL;
@@ -100,12 +104,13 @@ public class CommonService {
 
     );
 
-    public CommonService(ObjectMapper objectMapper) {
+    public CommonService(ObjectMapper objectMapper, CacheManager cacheManager) {
         this.objectMapper = objectMapper;
+        this.cacheManager = cacheManager;
     }
 
     //todo enable cashing
-    //@Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
+    @Cacheable(cacheNames = "seoToQuery", key = "#request.requestURL.toString() + ( #request.queryString != null ? '?' + #request.queryString : '' )")
     public String resolveSeoToQuery(HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("convert seo to url {}", request.getRequestURI());
@@ -502,6 +507,30 @@ public class CommonService {
             log.error("exception while fetch SEO data: {}", e.getMessage(), e);
             return Collections.emptyList();
         }
+    }
+
+    public ResponseEntity<?> purgeCacheUrl(CachePurgeRequest request, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        Map<String, Object> response = new HashMap<>();
+        var cache = cacheManager.getCache("seoToQuery");
+
+        if (request.isPurgeAll()) {
+            cache.clear();
+            response.put("status", "success");
+            response.put("message", "All entries in 'seoToQuery' cache cleared.");
+            return ResponseEntity.ok(response);
+        }
+
+        String key = request.getUrl();
+        if (key == null || key.trim().isEmpty()) {
+            response.put("status", "error");
+            response.put("message", "'Url' must be provided when purgeAll is false.");
+            return ResponseEntity.ok(response);
+        }
+
+        cache.evictIfPresent(key);
+        response.put("status", "success");
+        response.put("message", "Entry for Url [" + key + "] evicted from 'seoToQuery' cache.");
+        return ResponseEntity.ok(response);
     }
 }
 
