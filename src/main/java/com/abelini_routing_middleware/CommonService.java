@@ -272,13 +272,15 @@ public class CommonService {
 
                     List<SeoDataResponseDTO> dataList = fetchSeoData(pathParts, storeId, languageId, "keyword");
 
-                    if (dataList == null || dataList.isEmpty() || dataList.size() != pathParts.size()) {
-                        String url404 = "/internal/404.php";
-                        if (queryPart != null && !queryPart.isEmpty()) {
-                            url404 += "?" + queryPart;
-                        }
-                        return url404;
-                    }
+                    if (!"search_id".equals(key)) {
+    if (dataList == null || dataList.isEmpty() || dataList.size() != pathParts.size()) {
+        String url404 = "/internal/404.php";
+        if (queryPart != null && !queryPart.isEmpty()) {
+            url404 += "?" + queryPart;
+        }
+        return url404;
+    }
+}
 
                     if ("blog".equals(key) || "customer_story".equals(key)) {
                         key = dataList.get(0).getKey();
